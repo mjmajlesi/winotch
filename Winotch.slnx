@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Winotch/Winotch.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Winotch.Tests/Winotch.Tests.csproj" />
+  </Folder>
 </Solution>

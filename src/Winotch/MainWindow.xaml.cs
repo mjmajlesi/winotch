@@ -22,6 +22,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _clockTimer.Tick += (_, _) => UpdateClock();
         _statusTimer.Tick += async (_, _) => await RefreshStatusAsync();
+        _notifications.NotificationsChanged += (_, _) => Dispatcher.Invoke(async () => await RefreshStatusAsync());
         SystemEvents.DisplaySettingsChanged += (_, _) => PlaceWindow();
     }
 
@@ -52,6 +53,10 @@ public partial class MainWindow : Window
     private async Task RefreshStatusAsync()
     {
         var battery = SystemStatus.GetBattery();
+        var batteryVisual = BatteryVisual.FromPercent(battery.Percent);
+        BatteryFill.Width = batteryVisual.FillWidth;
+        BatteryFill.Background = batteryVisual.Brush;
+        BatteryBar.Foreground = batteryVisual.Brush;
         BatteryText.Text = $"{battery.Percent}%";
         BatteryBar.Value = battery.Percent;
         BatteryDetailText.Text = battery.IsCharging ? "Charging" : "On battery";
@@ -64,8 +69,18 @@ public partial class MainWindow : Window
 
         var wifi = await _wifi.GetCurrentAsync();
         WifiText.Text = wifi.Name is null ? "Offline" : $"{wifi.Name} {wifi.SignalText}";
-        WifiList.ItemsSource = await _wifi.GetNetworksAsync();
-        WifiStateText.Text = wifi.Name is null ? "No connected Wi-Fi" : $"Connected to {wifi.Name}";
+        var networks = (await _wifi.GetNetworksAsync()).ToList();
+        if (networks.Count == 0 && wifi.Name is not null)
+        {
+            networks.Add(new WifiNetwork(wifi.Name, "Connected"));
+        }
+
+        WifiList.ItemsSource = networks;
+        WifiStateText.Text = wifi.Name is null
+            ? "No connected Wi-Fi"
+            : networks.Count == 1 && networks[0].Signal == "Connected"
+                ? $"{wifi.Name} connected. Scan needs Windows Location permission."
+                : $"Connected to {wifi.Name}";
 
         var notifications = await _notifications.ReadAsync();
         NotificationStateText.Text = notifications.Status;
@@ -93,7 +108,7 @@ public partial class MainWindow : Window
         Animate(this, WidthProperty, width);
         Animate(this, LeftProperty, (SystemParameters.PrimaryScreenWidth - width) / 2);
         Animate(NotchShell, WidthProperty, width);
-        Animate(NotchShell, HeightProperty, expanded ? 226 : 68);
+        Animate(NotchShell, HeightProperty, expanded ? 246 : 68);
         Animate(DetailPanel, OpacityProperty, expanded ? 1 : 0);
     }
 
@@ -136,5 +151,11 @@ public partial class MainWindow : Window
         }
 
         WifiStateText.Text = await _wifi.ConnectAsync(network.Name);
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _notifications.Dispose();
+        base.OnClosed(e);
     }
 }

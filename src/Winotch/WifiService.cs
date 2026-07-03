@@ -8,19 +8,52 @@ public sealed class WifiService
     public async Task<WifiStatus> GetCurrentAsync()
     {
         var output = await RunNetshAsync("wlan", "show", "interfaces");
-        var ssid = ReadValue(output, "SSID");
-        var signal = ReadValue(output, "Signal");
-        return new WifiStatus(ssid, signal);
+        var current = ParseCurrentNetsh(output);
+        if (current.Name is not null)
+        {
+            return current;
+        }
+
+        var profileOutput = await RunPowerShellAsync("""
+            $profile = Get-NetConnectionProfile -InterfaceAlias 'Wi-Fi' -ErrorAction SilentlyContinue |
+              Where-Object { $_.IPv4Connectivity -eq 'Internet' } |
+              Select-Object -First 1 -ExpandProperty Name
+            $profile
+            """);
+        var profileName = ParseCurrentProfile(profileOutput);
+        return new WifiStatus(profileName, null);
     }
 
     public async Task<IReadOnlyList<WifiNetwork>> GetNetworksAsync()
     {
         var output = await RunNetshAsync("wlan", "show", "networks", "mode=bssid");
+        return ParseNetworks(output);
+    }
+
+    public static WifiStatus ParseCurrentNetsh(string output)
+    {
+        var ssid = ReadValue(output, "SSID");
+        var signal = ReadValue(output, "Signal");
+        return new WifiStatus(ssid, signal);
+    }
+
+    public static string? ParseCurrentProfile(string output)
+    {
+        var profile = output
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .FirstOrDefault(line => !string.IsNullOrWhiteSpace(line));
+
+        return profile is null ? null : NormalizeProfileName(profile);
+    }
+
+    public static IReadOnlyList<WifiNetwork> ParseNetworks(string output)
+    {
         var networks = new List<WifiNetwork>();
         string? currentName = null;
         string? currentSignal = null;
 
-        foreach (var rawLine in output.Split(Environment.NewLine))
+        foreach (var rawLine in SplitLines(output))
         {
             var line = rawLine.Trim();
             var ssidMatch = Regex.Match(line, @"^SSID \d+ : (?<name>.+)$");
@@ -65,7 +98,7 @@ public sealed class WifiService
 
     private static string? ReadValue(string output, string name)
     {
-        foreach (var rawLine in output.Split(Environment.NewLine))
+        foreach (var rawLine in SplitLines(output))
         {
             var line = rawLine.Trim();
             if (line.StartsWith(name, StringComparison.OrdinalIgnoreCase) &&
@@ -79,11 +112,20 @@ public sealed class WifiService
         return null;
     }
 
+    private static string NormalizeProfileName(string profile)
+    {
+        var match = Regex.Match(profile, @"^(?<name>.+)\s+\d+$");
+        return match.Success ? match.Groups["name"].Value.Trim() : profile.Trim();
+    }
+
     private static string ValueAfterColon(string line)
     {
         var colon = line.IndexOf(':');
         return colon < 0 ? "" : line[(colon + 1)..].Trim();
     }
+
+    private static string[] SplitLines(string text) =>
+        text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
 
     private static async Task<string> RunNetshAsync(params string[] arguments)
     {
@@ -94,6 +136,23 @@ public sealed class WifiService
             process.StartInfo.ArgumentList.Add(argument);
         }
 
+        process.StartInfo.UseShellExecute = false;
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.RedirectStandardError = true;
+        process.StartInfo.CreateNoWindow = true;
+        process.Start();
+        var output = await process.StandardOutput.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        return output;
+    }
+
+    private static async Task<string> RunPowerShellAsync(string command)
+    {
+        using var process = new Process();
+        process.StartInfo.FileName = "powershell.exe";
+        process.StartInfo.ArgumentList.Add("-NoProfile");
+        process.StartInfo.ArgumentList.Add("-Command");
+        process.StartInfo.ArgumentList.Add(command);
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
