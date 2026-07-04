@@ -106,6 +106,9 @@
                         <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                             <Setter TargetName="DeleteClipboardButton" Property="Opacity" Value="1" />
                         </DataTrigger>
+                        <DataTrigger Binding="{Binding IsKeyboardFocusWithin, ElementName=DeleteClipboardButton}" Value="True">
+                            <Setter TargetName="DeleteClipboardButton" Property="Opacity" Value="1" />
+                        </DataTrigger>
                     </DataTemplate.Triggers>
                 </DataTemplate>
             </ListBox.ItemTemplate>

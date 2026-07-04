@@ -14,6 +14,7 @@ public partial class SettingsWindow : Window
         _settings = settings;
         _startup = startup;
         InitializeComponent();
+        SourceInitialized += (_, _) => WindowChromeInterop.UseDarkCaption(this);
         Loaded += SettingsWindow_Loaded;
         Closed += SettingsWindow_Closed;
         _settings.Changed += Settings_Changed;
