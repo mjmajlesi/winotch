@@ -72,6 +72,26 @@ public class IcsParserTests
     }
 
     [Fact]
+    public void AllDayDateWithoutEndLastsThroughTheDay()
+    {
+        var calendarEvent = Assert.Single(IcsParser.Parse(string.Join("\n",
+            "BEGIN:VCALENDAR",
+            "BEGIN:VEVENT",
+            "UID:holiday",
+            "DTSTART;VALUE=DATE:20260704",
+            "SUMMARY:Holiday",
+            "END:VEVENT",
+            "END:VCALENDAR")));
+        var now = LocalTime(2026, 7, 4, 12, 0);
+
+        var occurrence = Assert.Single(IcsRecurrence.Expand([calendarEvent], now.AddHours(-1), now.AddHours(12)));
+
+        Assert.True(occurrence.IsAllDay);
+        Assert.Equal(TimeSpan.FromDays(1), occurrence.End - occurrence.Start);
+        Assert.Equal("Holiday", CalendarAgenda.Rows([occurrence], now, use24HourClock: true)[0].Title);
+    }
+
+    [Fact]
     public void TimeZoneRecurrenceKeepsLocalTimeAcrossDst()
     {
         var calendarEvent = Assert.Single(IcsParser.Parse(string.Join("\n",
@@ -169,6 +189,7 @@ public class IcsParserTests
     [InlineData("join https://teams.microsoft.com/l/meetup-join/abc/0", "https://teams.microsoft.com/l/meetup-join/abc/0")]
     [InlineData("https://teams.live.com/meet/123", "https://teams.live.com/meet/123")]
     [InlineData("meet https://meet.google.com/abc-defg-hij)", "https://meet.google.com/abc-defg-hij")]
+    [InlineData("join https://teams.microsoft.com/l/meetup-join/abc?context=one&amp;tenant=two", "https://teams.microsoft.com/l/meetup-join/abc?context=one&tenant=two")]
     public void JoinLinkDetectorFindsSupportedMeetingUrls(string text, string expected)
     {
         Assert.Equal(expected, JoinLinkDetector.FindFirst(text));

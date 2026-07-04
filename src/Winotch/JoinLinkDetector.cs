@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace Winotch;
@@ -17,7 +18,7 @@ public static class JoinLinkDetector
                 continue;
             }
 
-            var match = LinkPattern.Match(field);
+            var match = LinkPattern.Match(WebUtility.HtmlDecode(field) ?? field);
             if (match.Success)
             {
                 return match.Value.TrimEnd('.', ',', ';', ')', ']', '>');

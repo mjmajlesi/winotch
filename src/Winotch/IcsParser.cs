@@ -87,7 +87,7 @@ public static class IcsParser
         var durationProperty = properties.LastOrDefault(property => property.Name == "DURATION");
         return durationProperty is not null && IcsDateTimeParser.TryParseDuration(durationProperty.Value, out var parsed)
             ? parsed
-            : TimeSpan.Zero;
+            : start.IsDate ? TimeSpan.FromDays(1) : TimeSpan.Zero;
     }
 
     private static IReadOnlyList<CalendarDateTime> ExDates(IReadOnlyList<IcsProperty> properties, TimeZoneInfo fallbackZone)
