@@ -15,7 +15,7 @@ namespace Winotch;
 
 public partial class MainWindow
 {
-    private const int ShelfVisibleTileLimit = 10;
+    private const int ShelfVisibleTileLimit = 8;
     private const string ShelfDragMarker = "WinotchShelfDrag";
     private readonly FileShelfStore _fileShelfStore = new();
     private readonly ShellFileIconService _fileShelfIcons = new();

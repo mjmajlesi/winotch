@@ -34,13 +34,13 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ToggleChrome" Property="Background" Value="#242424" />
+                                <Setter TargetName="ToggleChrome" Property="Background" Value="{StaticResource NotchPanelHover}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="False">
-                                <Setter TargetName="ToggleChrome" Property="Background" Value="#303030" />
+                                <Setter TargetName="ToggleChrome" Property="Background" Value="{StaticResource NotchPanelPressed}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ToggleChrome" Property="Background" Value="#3A3A3A" />
+                                <Setter TargetName="ToggleChrome" Property="Background" Value="{StaticResource NotchStroke}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -54,7 +54,7 @@
             Padding="10"
             CornerRadius="24"
             Background="{StaticResource NotchBlack}"
-            BorderBrush="#343434"
+            BorderBrush="{StaticResource NotchStroke}"
             BorderThickness="1"
             RenderTransformOrigin="0.5,0">
         <Border.RenderTransform>
@@ -96,7 +96,7 @@
 
             <Border Grid.Row="1"
                     CornerRadius="18"
-                    Background="#0E0E0E"
+                    Background="{StaticResource NotchPanel}"
                     ClipToBounds="True"
                     SnapsToDevicePixels="True">
                 <Grid x:Name="PreviewViewport"

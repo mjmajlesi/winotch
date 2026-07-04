@@ -42,7 +42,7 @@
                                     Width="52"
                                     Height="28"
                                     CornerRadius="14"
-                                    Background="#343434"
+                                    Background="{StaticResource NotchStroke}"
                                     Margin="16,0,0,0">
                                 <Ellipse x:Name="SwitchThumb"
                                          Width="22"
@@ -54,7 +54,7 @@
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="SwitchTrack" Property="Background" Value="#2FD36B" />
+                                <Setter TargetName="SwitchTrack" Property="Background" Value="{StaticResource NotchAccent}" />
                                 <Setter TargetName="SwitchThumb" Property="Margin" Value="27,3,3,3" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
@@ -71,7 +71,7 @@
             <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
             <Setter Property="Foreground" Value="{StaticResource NotchText}" />
             <Setter Property="Background" Value="{StaticResource NotchPanel}" />
-            <Setter Property="BorderBrush" Value="#303030" />
+            <Setter Property="BorderBrush" Value="{StaticResource NotchStroke}" />
             <Setter Property="Padding" Value="10,6" />
             <Setter Property="MinWidth" Value="120" />
         </Style>
@@ -84,7 +84,7 @@
         </Style>
     </Window.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Hidden">
         <StackPanel Margin="28">
             <TextBlock Text="Winotch Settings"
                        FontSize="24"
@@ -225,12 +225,8 @@
                              TextWrapping="Wrap"
                              VerticalScrollBarVisibility="Auto"
                              Background="{StaticResource NotchBlack}"
-                             Foreground="{StaticResource NotchText}"
-                             BorderBrush="#343434"
-                             BorderThickness="1"
+                             Style="{StaticResource NotchTextBox}"
                              Padding="9,7"
-                             CaretBrush="{StaticResource NotchText}"
-                             FontFamily="Segoe UI Variable Text, Segoe UI"
                              FontSize="12"
                              TextChanged="CalendarUrlsChanged" />
                     <TextBlock Text="Refreshes every 5 minutes"

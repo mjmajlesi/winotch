@@ -57,7 +57,7 @@
                                         Width="16"
                                         Height="16"
                                         CornerRadius="8"
-                                        Background="#242424"
+                                        Background="{StaticResource NotchPanelHover}"
                                         BorderBrush="{StaticResource NotchBlack}"
                                         BorderThickness="1"
                                         HorizontalAlignment="Right"
@@ -78,7 +78,7 @@
                         </StackPanel>
                         <StackPanel x:Name="FocusLiveActivity" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="12,0,0,0">
                             <Grid Width="26" Height="3" VerticalAlignment="Center" Margin="0,0,7,0" ClipToBounds="True">
-                                <Border Background="#343434" CornerRadius="2" />
+                                <Border Background="{StaticResource NotchStroke}" CornerRadius="2" />
                                 <Border x:Name="FocusLiveProgressFill" Width="0" HorizontalAlignment="Left" Background="{StaticResource NotchText}" CornerRadius="2" />
                             </Grid>
                             <TextBlock x:Name="FocusLiveRemainingText"
@@ -153,7 +153,7 @@
                                   PanningMode="VerticalOnly">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="*" />
+                                <RowDefinition Height="380" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
@@ -318,11 +318,7 @@
                                              Width="48"
                                              Height="28"
                                              Padding="5,3"
-                                             Background="{StaticResource NotchPanel}"
-                                             Foreground="{StaticResource NotchText}"
-                                             BorderBrush="#343434"
-                                             BorderThickness="1"
-                                             CaretBrush="{StaticResource NotchText}"
+                                             Style="{StaticResource NotchTextBox}"
                                              TextAlignment="Center"
                                              ToolTip="Custom focus minutes"
                                              Typography.NumeralAlignment="Tabular" />
@@ -337,7 +333,7 @@
                                               Margin="0,0,10,0" />
                                     <Button Content="Start" Padding="12,5" Click="FocusStart_Click" />
                                 </DockPanel>
-                                <TextBlock x:Name="FocusValidationText" FontSize="11" Foreground="#FF453A" Visibility="Collapsed" Margin="0,5,0,0" />
+                                <TextBlock x:Name="FocusValidationText" FontSize="11" Foreground="{StaticResource NotchDanger}" Visibility="Collapsed" Margin="0,5,0,0" />
                             </StackPanel>
                             <StackPanel x:Name="FocusRunningPanel" Visibility="Collapsed" Margin="0,7,0,0">
                                 <DockPanel LastChildFill="True">
@@ -531,7 +527,7 @@
                             <DockPanel>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="Shelf" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" />
-                                    <Border CornerRadius="8" Background="#242424" Padding="6,1" Margin="7,0,0,0">
+                                    <Border CornerRadius="8" Background="{StaticResource NotchPanelHover}" Padding="6,1" Margin="7,0,0,0">
                                         <TextBlock x:Name="ShelfSectionCountText" FontSize="10" FontWeight="SemiBold" />
                                     </Border>
                                 </StackPanel>
@@ -568,12 +564,12 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="{x:Type local:ShelfTileViewModel}">
                                                 <Border x:Name="TileChrome"
-                                                        Width="92"
+                                                        Width="104"
                                                         Height="42"
                                                         Margin="0,0,8,0"
                                                         Padding="7"
                                                         CornerRadius="9"
-                                                        Background="#202020"
+                                                        Background="{StaticResource NotchPanelRaised}"
                                                         ToolTip="{Binding FullPath}"
                                                         PreviewMouseLeftButtonDown="ShelfItem_PreviewMouseLeftButtonDown"
                                                         PreviewMouseMove="ShelfDragSource_PreviewMouseMove">
@@ -585,7 +581,7 @@
                                                         </Grid.ColumnDefinitions>
                                                         <Grid Width="22" Height="22" VerticalAlignment="Center">
                                                             <Image Source="{Binding Icon}" Stretch="Uniform" />
-                                                            <Border x:Name="ShelfIconFallback" CornerRadius="5" Background="#303030" Visibility="Collapsed">
+                                                            <Border x:Name="ShelfIconFallback" CornerRadius="5" Background="{StaticResource NotchPanelPressed}" Visibility="Collapsed">
                                                                 <TextBlock Style="{StaticResource IconText}" Text="&#xE160;" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                             </Border>
                                                         </Grid>
@@ -601,7 +597,7 @@
                                                                 Width="18"
                                                                 Height="18"
                                                                 Padding="0"
-                                                                Background="#303030"
+                                                                Background="{StaticResource NotchPanelPressed}"
                                                                 Opacity="0"
                                                                 Tag="{Binding FullPath}"
                                                                 ToolTip="Remove"
@@ -628,7 +624,7 @@
                                 </ScrollViewer>
                                 <Border x:Name="ShelfOverflowBadge"
                                         CornerRadius="10"
-                                        Background="#303030"
+                                        Background="{StaticResource NotchPanelPressed}"
                                         Padding="8,3"
                                         HorizontalAlignment="Right"
                                         VerticalAlignment="Center"

@@ -7,6 +7,12 @@
     <Application.Resources>
         <SolidColorBrush x:Key="NotchBlack" Color="#050505" />
         <SolidColorBrush x:Key="NotchPanel" Color="#161616" />
+        <SolidColorBrush x:Key="NotchPanelRaised" Color="#202020" />
+        <SolidColorBrush x:Key="NotchPanelHover" Color="#242424" />
+        <SolidColorBrush x:Key="NotchPanelPressed" Color="#303030" />
+        <SolidColorBrush x:Key="NotchStroke" Color="#343434" />
+        <SolidColorBrush x:Key="NotchAccent" Color="#32D74B" />
+        <SolidColorBrush x:Key="NotchDanger" Color="#FF453A" />
         <SolidColorBrush x:Key="NotchText" Color="#F6F6F4" />
         <SolidColorBrush x:Key="NotchMutedText" Color="#9C9C9C" />
 
@@ -21,6 +27,50 @@
             <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
             <Setter Property="Foreground" Value="{StaticResource NotchText}" />
             <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+            <Setter Property="Foreground" Value="{StaticResource NotchMutedText}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border x:Name="CheckChrome"
+                                    Width="13"
+                                    Height="13"
+                                    CornerRadius="2"
+                                    Background="{StaticResource NotchPanelRaised}"
+                                    BorderBrush="{StaticResource NotchStroke}"
+                                    BorderThickness="1"
+                                    Margin="0,0,6,0">
+                                <TextBlock x:Name="CheckGlyph"
+                                           Style="{StaticResource IconText}"
+                                           Text="&#xE73E;"
+                                           FontSize="8"
+                                           Foreground="{StaticResource NotchBlack}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Visibility="Collapsed" />
+                            </Border>
+                            <ContentPresenter RecognizesAccessKey="True" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CheckChrome" Property="BorderBrush" Value="{StaticResource NotchMutedText}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="CheckChrome" Property="Background" Value="{StaticResource NotchText}" />
+                                <Setter TargetName="CheckGlyph" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style TargetType="Button">
@@ -41,10 +91,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonChrome" Property="Background" Value="#242424" />
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="{StaticResource NotchPanelHover}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonChrome" Property="Background" Value="#303030" />
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="{StaticResource NotchPanelPressed}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.38" />
@@ -59,7 +109,7 @@
             <Setter Property="Width" Value="28" />
             <Setter Property="Height" Value="28" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Background" Value="#202020" />
+            <Setter Property="Background" Value="{StaticResource NotchPanelRaised}" />
             <Setter Property="Margin" Value="0,0,8,0" />
         </Style>
 
@@ -89,8 +139,8 @@
 
         <Style x:Key="ModernProgressBar" TargetType="ProgressBar">
             <Setter Property="Height" Value="6" />
-            <Setter Property="Background" Value="#343434" />
-            <Setter Property="Foreground" Value="#32D74B" />
+            <Setter Property="Background" Value="{StaticResource NotchStroke}" />
+            <Setter Property="Foreground" Value="{StaticResource NotchAccent}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ProgressBar">
@@ -127,7 +177,7 @@
                                     <RepeatButton Command="Slider.IncreaseLarge" IsTabStop="False">
                                         <RepeatButton.Template>
                                             <ControlTemplate TargetType="RepeatButton">
-                                                <Border Height="5" Background="#3A3A3A" CornerRadius="3" />
+                                                <Border Height="5" Background="{StaticResource NotchStroke}" CornerRadius="3" />
                                             </ControlTemplate>
                                         </RepeatButton.Template>
                                     </RepeatButton>
@@ -147,6 +197,41 @@
                                 </Track.Thumb>
                             </Track>
                         </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="NotchTextBox" TargetType="TextBox">
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+            <Setter Property="Foreground" Value="{StaticResource NotchText}" />
+            <Setter Property="Background" Value="{StaticResource NotchPanel}" />
+            <Setter Property="BorderBrush" Value="{StaticResource NotchStroke}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CaretBrush" Value="{StaticResource NotchText}" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="TextBoxChrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="7">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}"
+                                          VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="TextBoxChrome" Property="BorderBrush" Value="{StaticResource NotchMutedText}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
