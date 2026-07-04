@@ -153,11 +153,6 @@ public static class FileShelfDisplay
 
 public sealed class FileShelfStore
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true
-    };
-
     private readonly string _path;
 
     public FileShelfStore()
@@ -183,7 +178,7 @@ public sealed class FileShelfStore
             }
 
             await using var stream = File.OpenRead(_path);
-            var document = await JsonSerializer.DeserializeAsync<FileShelfDocument>(stream, JsonOptions);
+            var document = await JsonSerializer.DeserializeAsync<FileShelfDocument>(stream);
             return new FileShelf(document?.Paths ?? []);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
@@ -201,7 +196,7 @@ public sealed class FileShelfStore
         }
 
         await using var stream = File.Create(_path);
-        await JsonSerializer.SerializeAsync(stream, new FileShelfDocument(shelf.Paths), JsonOptions);
+        await JsonSerializer.SerializeAsync(stream, new FileShelfDocument(shelf.Paths));
     }
 
     private sealed record FileShelfDocument(IReadOnlyList<string> Paths);
