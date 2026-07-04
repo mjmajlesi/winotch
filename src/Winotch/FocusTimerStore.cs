@@ -37,15 +37,7 @@ public sealed class FocusTimerStore
         }
 
         var advanced = state.AdvanceTo(now);
-        if (advanced.State.IsActive)
-        {
-            Save(advanced.State);
-        }
-        else
-        {
-            Clear();
-        }
-
+        Save(advanced.State);
         return advanced;
     }
 
@@ -68,10 +60,7 @@ public sealed class FocusTimerStore
 
     public void Clear()
     {
-        if (File.Exists(_path))
-        {
-            File.Delete(_path);
-        }
+        File.Delete(_path);
     }
 
     private FocusTimerState ReadState()

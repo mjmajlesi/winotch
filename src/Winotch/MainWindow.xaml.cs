@@ -9,6 +9,7 @@ namespace Winotch;
 
 public partial class MainWindow : Window
 {
+    private const double FocusLiveProgressWidth = 26;
     private static readonly System.Windows.Media.FontFamily ToastTextFont = new("Segoe UI Variable Text, Segoe UI");
     private static readonly System.Windows.Media.FontFamily ToastIconFont = new("Segoe MDL2 Assets");
     private readonly DispatcherTimer _clockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
@@ -25,6 +26,7 @@ public partial class MainWindow : Window
     private readonly AppBarReservationService _appBar = new();
     private readonly PriorityStatusService _priorityStatus = new();
     private readonly PriorityStatusTracker _priorityAlerts = new();
+    private readonly FocusTimerStore _focusTimerStore = new();
     private bool _expanded;
     private bool _compactToastVisible;
     private bool _updatingVolume;
@@ -34,11 +36,17 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _compactToastHide;
     private FrameworkElement? _activeCompactToast;
     private IReadOnlyList<NotificationAction> _notificationToastActions = [];
+    private FocusTimerState _focusTimer = FocusTimerState.Stopped;
+    private FocusTimerSettings _selectedFocusSettings = FocusTimerSettings.ShortPreset;
 
     public MainWindow()
     {
         InitializeComponent();
-        _clockTimer.Tick += (_, _) => UpdateClock();
+        _clockTimer.Tick += (_, _) =>
+        {
+            UpdateClock();
+            RefreshFocusTimer();
+        };
         _statusTimer.Tick += async (_, _) => await RefreshStatusAsync();
         _shellTimer.Tick += (_, _) => ApplyShellMode(ForegroundWindowService.DetectShellMode(), animate: false);
         _collapseTimer.Tick += (_, _) => CollapseAfterPointerExit();
@@ -52,7 +60,9 @@ public partial class MainWindow : Window
     {
         _animationFrameRate = DisplayRefreshRateService.GetPrimaryRefreshRate();
         ApplyShellMode(ForegroundWindowService.DetectShellMode(), animate: false);
+        LoadFocusTimer();
         UpdateClock();
+        RefreshFocusTimer();
         _clockTimer.Start();
         _statusTimer.Start();
         _shellTimer.Start();
@@ -80,6 +90,73 @@ public partial class MainWindow : Window
         DateText.Text = now.ToString("ddd, MMM d");
         LargeTimeText.Text = now.ToString("HH:mm:ss");
         LargeDateText.Text = now.ToString("dddd, MMMM d");
+    }
+
+    private void LoadFocusTimer()
+    {
+        var loaded = _focusTimerStore.Load(DateTimeOffset.UtcNow);
+        _focusTimer = loaded.State;
+        ShowLatestFocusCompletion(loaded.Completions);
+    }
+
+    private void RefreshFocusTimer()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var advanced = _focusTimer.AdvanceTo(now);
+        if (advanced.State != _focusTimer)
+        {
+            _focusTimer = advanced.State;
+            _focusTimerStore.Save(_focusTimer);
+            ShowLatestFocusCompletion(advanced.Completions);
+        }
+
+        ApplyFocusTimerUi(now);
+    }
+
+    private void ApplyFocusTimerUi(DateTimeOffset now)
+    {
+        var snapshot = _focusTimer.SnapshotAt(now);
+        var active = snapshot.Status != FocusTimerStatus.Stopped;
+        FocusSetupPanel.Visibility = active ? Visibility.Collapsed : Visibility.Visible;
+        FocusRunningPanel.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
+        FocusLiveActivity.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
+        if (!active)
+        {
+            FocusLiveProgressFill.Width = 0;
+            return;
+        }
+
+        FocusPhaseText.Text = snapshot.PhaseLabel;
+        FocusRemainingText.Text = snapshot.RemainingText;
+        FocusPauseResumeButton.Content = snapshot.Status == FocusTimerStatus.Paused ? "Resume" : "Pause";
+        FocusProgressBar.Value = snapshot.Progress * 100;
+        FocusLiveRemainingText.Text = snapshot.RemainingText;
+        FocusLiveProgressFill.Width = FocusLiveProgressWidth * snapshot.Progress;
+        FocusAutoCycleCheckBox.IsChecked = snapshot.AutoCycle;
+    }
+
+    private void ShowLatestFocusCompletion(IReadOnlyList<FocusTimerCompletion> completions)
+    {
+        if (completions.Count > 0)
+        {
+            ShowFocusCompletionToast(completions[^1]);
+        }
+    }
+
+    private void ShowFocusCompletionToast(FocusTimerCompletion completion)
+    {
+        NotificationToastTitleText.Text = completion.ToastTitle;
+        NotificationToastBodyText.Text = "";
+        NotificationToastAppText.Text = "Focus Timer";
+        NotificationToastTimeText.Text = "Now";
+        NotificationToastIconImage.Source = null;
+        NotificationToastIconImage.Visibility = Visibility.Collapsed;
+        NotificationToastIconFallback.FontFamily = ToastTextFont;
+        NotificationToastIconFallback.FontSize = 16;
+        NotificationToastIconFallback.Text = "F";
+        NotificationToastIconFallback.Visibility = Visibility.Visible;
+        ApplyNotificationToastActions([]);
+        ShowCompactToast(NotificationToastPanel);
     }
 
     private async Task RefreshStatusAsync()
@@ -187,6 +264,7 @@ public partial class MainWindow : Window
 
     private async void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
     {
+        RefreshFocusTimer();
         await RefreshStatusAsync();
     }
 
@@ -482,6 +560,66 @@ public partial class MainWindow : Window
 
         _audio.SetVolume((float)e.NewValue);
         VolumeText.Text = $"{e.NewValue:0}%";
+    }
+
+    private void FocusShortPreset_Click(object sender, RoutedEventArgs e)
+    {
+        _selectedFocusSettings = FocusTimerSettings.ShortPreset;
+        FocusCustomMinutesBox.Text = "";
+        FocusValidationText.Visibility = Visibility.Collapsed;
+    }
+
+    private void FocusLongPreset_Click(object sender, RoutedEventArgs e)
+    {
+        _selectedFocusSettings = FocusTimerSettings.LongPreset;
+        FocusCustomMinutesBox.Text = "";
+        FocusValidationText.Visibility = Visibility.Collapsed;
+    }
+
+    private void FocusStart_Click(object sender, RoutedEventArgs e)
+    {
+        var autoCycle = FocusAutoCycleCheckBox.IsChecked == true;
+        FocusTimerSettings settings;
+        if (string.IsNullOrWhiteSpace(FocusCustomMinutesBox.Text))
+        {
+            settings = _selectedFocusSettings with { AutoCycle = autoCycle };
+        }
+        else if (!FocusTimerSettings.TryCreateCustom(FocusCustomMinutesBox.Text, autoCycle, out settings, out var error))
+        {
+            FocusValidationText.Text = error;
+            FocusValidationText.Visibility = Visibility.Visible;
+            return;
+        }
+
+        _focusTimer = FocusTimerState.Start(settings, DateTimeOffset.UtcNow);
+        FocusValidationText.Visibility = Visibility.Collapsed;
+        _focusTimerStore.Save(_focusTimer);
+        ApplyFocusTimerUi(DateTimeOffset.UtcNow);
+    }
+
+    private void FocusPauseResume_Click(object sender, RoutedEventArgs e)
+    {
+        var now = DateTimeOffset.UtcNow;
+        _focusTimer = _focusTimer.Status == FocusTimerStatus.Paused
+            ? _focusTimer.Resume(now)
+            : _focusTimer.Pause(now);
+        _focusTimerStore.Save(_focusTimer);
+        ApplyFocusTimerUi(now);
+    }
+
+    private void FocusSkip_Click(object sender, RoutedEventArgs e)
+    {
+        var now = DateTimeOffset.UtcNow;
+        _focusTimer = _focusTimer.Skip(now);
+        _focusTimerStore.Save(_focusTimer);
+        ApplyFocusTimerUi(now);
+    }
+
+    private void FocusStop_Click(object sender, RoutedEventArgs e)
+    {
+        _focusTimer = _focusTimer.Stop();
+        _focusTimerStore.Clear();
+        ApplyFocusTimerUi(DateTimeOffset.UtcNow);
     }
 
     private async void ConnectWifi_Click(object sender, RoutedEventArgs e)

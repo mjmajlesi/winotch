@@ -13,12 +13,14 @@ flowchart TD
     Status --> Wifi["netsh wlan"]
     Status --> Notifications["UserNotificationListener"]
     Status --> Priority["Priority Status Alerts"]
+    Window --> Focus["Focus Timer State + JSON Store"]
     Battery --> Window
     Audio --> Window
     Media --> Window
     Wifi --> Window
     Notifications --> Window
     Priority --> Window
+    Focus --> Window
 ```
 
 ## UI System
@@ -31,6 +33,8 @@ flowchart LR
     Shell --> Compact["Compact State"]
     Shell --> Expanded["Expanded State"]
     Expanded --> Media["Now Playing Controls"]
+    Expanded --> FocusPanel["Focus Timer Controls"]
+    Compact --> FocusLive["Focus Live Activity"]
     Shell --> MediaToast["Compact Media Toast"]
     Shell --> NotificationToast["Compact Notification/Status Toast"]
     Expanded --> Notifications["Notifications"]
@@ -78,12 +82,17 @@ Winotch reads notification history through `UserNotificationListener` when Windo
 
 Priority status alerts reuse the compact notification toast surface for system events that should be glanceable without opening the full capsule: low battery, charger connect/disconnect, Wi-Fi loss/reconnect, Bluetooth device connect, and mic/camera activation. Battery and Wi-Fi reuse the existing status reads. Bluetooth uses the native Windows Bluetooth device enumeration API, while mic/camera activity comes from Windows privacy usage registry state. The tracker suppresses routine first-run connection state and repeated low-battery spam, but queues simultaneous critical alerts such as camera, microphone, and low battery.
 
+## Focus Timer
+
+The focus timer is a pure timestamp-driven state machine persisted as JSON under `%LOCALAPPDATA%\Winotch\focus-timer.json`. The UI refreshes it on the existing one-second clock timer and on power resume, then recomputes remaining time from wall clock instead of accumulating ticks. Focus phases always advance into a break; break completion starts another focus phase only when auto-cycle is enabled. Completion messages reuse the compact notification toast surface and collapse multiple closed-app completions to one visible toast on load.
+
 ## Test Strategy
 
 The automated suite focuses on deterministic logic that would otherwise surface as visual bugs:
 
 - Wi-Fi netsh/profile parsing, de-duplication, blank values, and visible list limits.
 - Battery icon fill width, clamp behavior, charging color, and low-power thresholds.
+- Focus timer start/pause/resume/skip/stop/auto-cycle transitions, wall-clock remaining math, persistence roundtrip, expired-while-closed handling, formatting, and progress clamp behavior.
 - Media snapshot display fallbacks, artwork fallback, compact toast geometry/timing, and track-change de-duplication.
 - Notification signature generation, first-run suppression, empty snapshot behavior, repeated-message handling, shell suppression mapping, compact toast metadata, and live action invocation.
 - Priority status transition handling for low battery, charger changes, Wi-Fi loss/reconnect, Bluetooth connects, mic/camera activation, queued alerts, and privacy active-use detection.

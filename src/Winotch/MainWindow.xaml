@@ -54,6 +54,18 @@
                             <TextBlock x:Name="TimeText" FontSize="17" FontWeight="SemiBold" LineHeight="24" LineStackingStrategy="BlockLineHeight" MinWidth="82" />
                             <TextBlock x:Name="DateText" Foreground="{StaticResource NotchMutedText}" FontSize="12" LineHeight="15" Margin="0,1,0,0" />
                         </StackPanel>
+                        <StackPanel x:Name="FocusLiveActivity" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed" Margin="12,0,0,0">
+                            <Grid Width="26" Height="3" VerticalAlignment="Center" Margin="0,0,7,0" ClipToBounds="True">
+                                <Border Background="#343434" CornerRadius="2" />
+                                <Border x:Name="FocusLiveProgressFill" Width="0" HorizontalAlignment="Left" Background="{StaticResource NotchText}" CornerRadius="2" />
+                            </Grid>
+                            <TextBlock x:Name="FocusLiveRemainingText"
+                                       Width="42"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       TextAlignment="Right"
+                                       Typography.NumeralAlignment="Tabular" />
+                        </StackPanel>
                     </StackPanel>
 
                     <StackPanel x:Name="StatusGroup" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
@@ -169,7 +181,56 @@
                         </ListBox>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="2">
+                    <StackPanel Grid.Column="2" Margin="0,0,22,0">
+                        <StackPanel Margin="0,0,0,16">
+                            <TextBlock Text="Focus" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" />
+                            <StackPanel x:Name="FocusSetupPanel" Margin="0,7,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="25/5" Padding="9,5" Margin="0,0,6,0" Click="FocusShortPreset_Click" />
+                                    <Button Content="50/10" Padding="9,5" Margin="0,0,8,0" Click="FocusLongPreset_Click" />
+                                    <TextBox x:Name="FocusCustomMinutesBox"
+                                             Width="48"
+                                             Height="28"
+                                             Padding="5,3"
+                                             Background="{StaticResource NotchPanel}"
+                                             Foreground="{StaticResource NotchText}"
+                                             BorderBrush="#343434"
+                                             BorderThickness="1"
+                                             CaretBrush="{StaticResource NotchText}"
+                                             TextAlignment="Center"
+                                             ToolTip="Custom focus minutes"
+                                             Typography.NumeralAlignment="Tabular" />
+                                </StackPanel>
+                                <DockPanel Margin="0,8,0,0" LastChildFill="False">
+                                    <CheckBox x:Name="FocusAutoCycleCheckBox"
+                                              Content="Auto-cycle"
+                                              Foreground="{StaticResource NotchMutedText}"
+                                              FontFamily="Segoe UI Variable Text, Segoe UI"
+                                              FontSize="11"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,10,0" />
+                                    <Button Content="Start" Padding="12,5" Click="FocusStart_Click" />
+                                </DockPanel>
+                                <TextBlock x:Name="FocusValidationText" FontSize="11" Foreground="#FF453A" Visibility="Collapsed" Margin="0,5,0,0" />
+                            </StackPanel>
+                            <StackPanel x:Name="FocusRunningPanel" Visibility="Collapsed" Margin="0,7,0,0">
+                                <DockPanel LastChildFill="True">
+                                    <TextBlock x:Name="FocusPhaseText" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" />
+                                    <TextBlock x:Name="FocusRemainingText"
+                                               DockPanel.Dock="Right"
+                                               FontSize="22"
+                                               FontWeight="SemiBold"
+                                               TextAlignment="Right"
+                                               Typography.NumeralAlignment="Tabular" />
+                                </DockPanel>
+                                <ProgressBar x:Name="FocusProgressBar" Style="{StaticResource ModernProgressBar}" Height="4" Margin="0,6,0,8" Maximum="100" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="FocusPauseResumeButton" Content="Pause" Padding="9,5" Margin="0,0,6,0" Click="FocusPauseResume_Click" />
+                                    <Button Content="Skip" Padding="9,5" Margin="0,0,6,0" Click="FocusSkip_Click" />
+                                    <Button Content="Stop" Padding="9,5" Click="FocusStop_Click" />
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
                         <TextBlock Text="Sound" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" />
                         <Slider x:Name="VolumeSlider" Style="{StaticResource ModernSlider}" Minimum="0" Maximum="100" Margin="0,8,0,16" ValueChanged="VolumeSlider_ValueChanged" />
                         <TextBlock Text="Wi-Fi" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" />
