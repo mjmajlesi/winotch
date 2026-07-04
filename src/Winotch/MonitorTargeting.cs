@@ -188,18 +188,8 @@ public static class MonitorTargeting
 
     private static (double X, double Y) GetDpiScale(IntPtr monitor)
     {
-        if (monitor == IntPtr.Zero)
-        {
-            return (1, 1);
-        }
-
-        if (GetScaleFactorForMonitor(monitor, out var scalePercent) == 0 && scalePercent > 0)
-        {
-            var scale = scalePercent / 100d;
-            return (scale, scale);
-        }
-
-        if (GetDpiForMonitor(monitor, EffectiveDpi, out var dpiX, out var dpiY) != 0)
+        if (monitor == IntPtr.Zero ||
+            GetDpiForMonitor(monitor, EffectiveDpi, out var dpiX, out var dpiY) != 0)
         {
             return (1, 1);
         }
@@ -219,9 +209,6 @@ public static class MonitorTargeting
         int dpiType,
         out uint dpiX,
         out uint dpiY);
-
-    [DllImport("shcore.dll")]
-    private static extern int GetScaleFactorForMonitor(IntPtr monitor, out int scaleFactor);
 
     [StructLayout(LayoutKind.Sequential)]
     private readonly record struct NativePoint(int X, int Y);
