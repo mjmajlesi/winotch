@@ -6,10 +6,6 @@ namespace Winotch;
 
 public sealed class SystemStatsService : IDisposable
 {
-    private const int SampleCapacity = 60;
-    private readonly FixedSampleBuffer _cpuSamples = new(SampleCapacity);
-    private readonly FixedSampleBuffer _ramSamples = new(SampleCapacity);
-    private readonly FixedSampleBuffer _networkSamples = new(SampleCapacity);
     private readonly NetworkThroughputSampler _network = new();
     private CpuUsageCounter? _cpu;
     private bool _cpuUnavailable;
@@ -20,9 +16,6 @@ public sealed class SystemStatsService : IDisposable
     public void BeginSession()
     {
         EndSession();
-        _cpuSamples.Clear();
-        _ramSamples.Clear();
-        _networkSamples.Clear();
         _network.Reset();
 
         // Perf counters are expensive and can be corrupt; create them only while the panel is expanded.
@@ -66,12 +59,10 @@ public sealed class SystemStatsService : IDisposable
             _cpuUnavailable = true;
             _cpu.Dispose();
             _cpu = null;
-            _cpuSamples.Clear();
             return null;
         }
 
-        _cpuSamples.Push(percent.Value);
-        return new SystemStatRowSnapshot(SystemStatsFormatter.FormatCpu(percent.Value), _cpuSamples.Snapshot());
+        return new SystemStatRowSnapshot(SystemStatsFormatter.FormatCpu(percent.Value));
     }
 
     private SystemStatRowSnapshot? ReadRam()
@@ -84,17 +75,10 @@ public sealed class SystemStatsService : IDisposable
         if (!MemoryStatusReader.TryRead(out var memory))
         {
             _memoryUnavailable = true;
-            _ramSamples.Clear();
             return null;
         }
 
-        var usedPercent = memory.TotalBytes == 0
-            ? 0
-            : (double)memory.UsedBytes / memory.TotalBytes * 100;
-        _ramSamples.Push(usedPercent);
-        return new SystemStatRowSnapshot(
-            SystemStatsFormatter.FormatRam(memory.UsedBytes, memory.TotalBytes),
-            _ramSamples.Snapshot());
+        return new SystemStatRowSnapshot(SystemStatsFormatter.FormatRam(memory.UsedBytes, memory.TotalBytes));
     }
 
     private SystemStatRowSnapshot? ReadNetwork()
@@ -109,17 +93,14 @@ public sealed class SystemStatsService : IDisposable
             var rates = _network.Sample(DateTimeOffset.UtcNow);
             if (rates is null)
             {
-                _networkSamples.Clear();
                 return null;
             }
 
-            _networkSamples.Push(rates.DownBytesPerSecond + rates.UpBytesPerSecond);
-            return new SystemStatRowSnapshot(SystemStatsFormatter.FormatNetwork(rates), _networkSamples.Snapshot());
+            return new SystemStatRowSnapshot(SystemStatsFormatter.FormatNetwork(rates));
         }
         catch
         {
             _networkUnavailable = true;
-            _networkSamples.Clear();
             return null;
         }
     }
