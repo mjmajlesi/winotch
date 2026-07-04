@@ -37,6 +37,8 @@ The tray icon opens Settings, pauses/resumes the overlay, toggles Start with Win
 
 Drag files or folders from Explorer onto the notch to place their full paths on the shelf. The expanded panel shows shelved items with shell icons, truncated names, full-path tooltips, per-item remove buttons, a Clear action, and a drag-all affordance. Drag an item, or all existing items, back out to Explorer or another app to start a normal Windows file drop. Shelf state persists at `%LOCALAPPDATA%\Winotch\shelf.json`; missing or corrupt shelf data loads as an empty shelf.
 
+The camera button in the expanded control center opens a small live mirror flyout below the notch. The preview is mirrored by default, has a one-click normal-view toggle, and closes on X, Esc, outside click, notch collapse, pause, or power transition. Winotch never records or saves camera frames; the camera device is opened only for the live preview and released on close. The mirror uses the default Windows camera only; a camera picker is intentionally out of scope.
+
 ## Test
 
 Run the full regression suite before sharing a build:
@@ -45,13 +47,17 @@ Run the full regression suite before sharing a build:
 dotnet test Winotch.slnx
 ```
 
-The tests cover Wi-Fi parsing, battery fill/color thresholds, focus timer state transitions/persistence/formatting, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, clipboard history preview/privacy/dedupe behavior, priority status alert transitions, control-center naming/device/brightness/debounce state logic, file shelf model/persistence/display behavior, settings persistence/startup helpers, shell mode/fullscreen heuristics, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
+The tests cover Wi-Fi parsing, battery fill/color thresholds, focus timer state transitions/persistence/formatting, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, clipboard history preview/privacy/dedupe behavior, priority status alert transitions, control-center naming/device/brightness/debounce state logic, file shelf model/persistence/display behavior, camera mirror lifecycle/layout/suppression behavior, settings persistence/startup helpers, shell mode/fullscreen heuristics, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
 
 ## Clipboard History
 
 Winotch keeps the latest 10 clipboard items in memory while the app is running. It does not write clipboard history to disk, settings, logs, or roaming storage. That is the privacy default: closing Winotch clears its private clipboard history.
 
 The listener skips clipboard updates marked with Windows privacy exclusion formats such as `ExcludeClipboardContentFromMonitorProcessing` or `CanIncludeInClipboardHistory = 0`. Image captures store only a small thumbnail, not the original full bitmap.
+
+## Camera Mirror
+
+The camera mirror uses `Windows.Media.Capture.MediaCapture` with CPU-backed frame reading and renders frames into WPF as an in-memory preview. If Windows reports no camera, access denial, or exclusive-use failure, the flyout shows a quiet inline message instead of retrying. Opening the mirror suppresses Winotch's own camera-in-use priority alert while the preview is active.
 
 ## Install
 
