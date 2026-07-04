@@ -70,8 +70,6 @@ public sealed record FocusTimerState(
         return next.State;
     }
 
-    public FocusTimerState Stop() => Stopped;
-
     public FocusTimerAdvance AdvanceTo(DateTimeOffset now)
     {
         if (Status != FocusTimerStatus.Running)

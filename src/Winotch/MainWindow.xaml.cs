@@ -617,7 +617,7 @@ public partial class MainWindow : Window
 
     private void FocusStop_Click(object sender, RoutedEventArgs e)
     {
-        _focusTimer = _focusTimer.Stop();
+        _focusTimer = FocusTimerState.Stopped;
         _focusTimerStore.Clear();
         ApplyFocusTimerUi(DateTimeOffset.UtcNow);
     }

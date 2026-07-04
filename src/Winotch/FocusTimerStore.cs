@@ -30,12 +30,6 @@ public sealed class FocusTimerStore
     public FocusTimerAdvance Load(DateTimeOffset now)
     {
         var state = ReadState();
-        if (!state.IsActive)
-        {
-            Clear();
-            return new FocusTimerAdvance(FocusTimerState.Stopped, []);
-        }
-
         var advanced = state.AdvanceTo(now);
         Save(advanced.State);
         return advanced;
