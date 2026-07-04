@@ -25,6 +25,7 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _statusTimer = new() { Interval = TimeSpan.FromSeconds(3) };
     private readonly DispatcherTimer _shellTimer = new() { Interval = TimeSpan.FromMilliseconds(700) };
     private readonly DispatcherTimer _collapseTimer = new() { Interval = ShellAnimationTiming.CollapseGuard };
+    private readonly DispatcherTimer _statsTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly AudioService _audio = new();
     private readonly AudioDeviceService _audioDevices = new();
     private readonly AudioSessionService _audioSessions = new();
@@ -43,6 +44,7 @@ public partial class MainWindow : Window
     private readonly TrayIconService _trayIcon;
     private readonly ClipboardHistoryMonitor _clipboardHistory = new();
     private readonly FocusTimerStore _focusTimerStore = new();
+    private readonly SystemStatsService _systemStats = new();
     private bool _expanded;
     private bool _compactToastVisible;
     private bool _updatingVolume;
@@ -75,6 +77,7 @@ public partial class MainWindow : Window
         _statusTimer.Tick += async (_, _) => await RefreshStatusAsync();
         _shellTimer.Tick += (_, _) => ApplyShellMode(ForegroundWindowService.DetectShellMode(), animate: false);
         _collapseTimer.Tick += (_, _) => CollapseAfterPointerExit();
+        _statsTimer.Tick += (_, _) => RefreshSystemStats();
         _notifications.NotificationsChanged += (_, _) => Dispatcher.Invoke(async () => await RefreshStatusAsync());
         _media.MediaChanged += (_, _) => Dispatcher.Invoke(async () => await RefreshStatusAsync());
         _clipboardHistory.HistoryChanged += OnClipboardHistoryChanged;
@@ -286,6 +289,7 @@ public partial class MainWindow : Window
             _statusTimer.Stop();
             _shellTimer.Stop();
             _collapseTimer.Stop();
+            StopSystemStats();
             _expandedReveal?.Cancel();
             _expandedReveal?.Dispose();
             _expandedReveal = null;
@@ -473,6 +477,7 @@ public partial class MainWindow : Window
         _expandedReveal = null;
         if (!expanded)
         {
+            StopSystemStats();
             ApplyShellMode(ForegroundWindowService.DetectShellMode());
             return;
         }
@@ -489,9 +494,64 @@ public partial class MainWindow : Window
         ShellAnimator.Clear(this, NotchShell, DetailPanel);
         DetailPanel.Opacity = 0;
         ShellAnimator.AnimateShell(this, NotchShell, ShellMetrics.Expanded(PrimaryScreenWidthDip()), _animationFrameRate);
+        StartSystemStats();
         _ = RefreshControlCenterAsync();
         _expandedReveal = new CancellationTokenSource();
         _ = RevealExpandedContentAsync(_expandedReveal.Token);
+    }
+
+    private void StartSystemStats()
+    {
+        _statsTimer.Stop();
+        _systemStats.BeginSession();
+        RefreshSystemStats();
+        _statsTimer.Start();
+    }
+
+    private void StopSystemStats()
+    {
+        _statsTimer.Stop();
+        _systemStats.EndSession();
+        ApplySystemStats(new SystemStatsSnapshot(null, null, null));
+    }
+
+    private void RefreshSystemStats()
+    {
+        if (!_expanded)
+        {
+            StopSystemStats();
+            return;
+        }
+
+        ApplySystemStats(_systemStats.Read());
+    }
+
+    private void ApplySystemStats(SystemStatsSnapshot snapshot)
+    {
+        SystemStatsSection.Visibility = snapshot.HasRows ? Visibility.Visible : Visibility.Collapsed;
+        ApplyStatsRow(StatsCpuRow, StatsCpuValueText, StatsCpuSparkline, snapshot.Cpu);
+        ApplyStatsRow(StatsRamRow, StatsRamValueText, StatsRamSparkline, snapshot.Ram);
+        ApplyStatsRow(StatsNetRow, StatsNetValueText, StatsNetSparkline, snapshot.Network);
+    }
+
+    private static void ApplyStatsRow(
+        UIElement row,
+        TextBlock valueText,
+        SparklineControl sparkline,
+        SystemStatRowSnapshot? snapshot)
+    {
+        row.Visibility = snapshot is null ? Visibility.Collapsed : Visibility.Visible;
+        if (snapshot is null)
+        {
+            sparkline.Values = [];
+            valueText.Text = "";
+            valueText.ToolTip = null;
+            return;
+        }
+
+        valueText.Text = snapshot.ValueText;
+        valueText.ToolTip = snapshot.ValueText;
+        sparkline.Values = snapshot.Samples;
     }
 
     private void ShowMediaToast()
@@ -1049,6 +1109,8 @@ public partial class MainWindow : Window
         _expandedReveal?.Dispose();
         _compactToastHide?.Cancel();
         _compactToastHide?.Dispose();
+        _statsTimer.Stop();
+        _systemStats.Dispose();
         DisposeFileShelf();
         _trayIcon.Dispose();
         _settings.Changed -= Settings_Changed;
