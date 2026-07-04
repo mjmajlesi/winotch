@@ -613,21 +613,19 @@ public partial class MainWindow : Window
     private void ApplySystemStats(SystemStatsSnapshot snapshot)
     {
         SystemStatsSection.Visibility = snapshot.HasRows ? Visibility.Visible : Visibility.Collapsed;
-        ApplyStatsRow(StatsCpuRow, StatsCpuValueText, StatsCpuSparkline, snapshot.Cpu);
-        ApplyStatsRow(StatsRamRow, StatsRamValueText, StatsRamSparkline, snapshot.Ram);
-        ApplyStatsRow(StatsNetRow, StatsNetValueText, StatsNetSparkline, snapshot.Network);
+        ApplyStatsRow(StatsCpuRow, StatsCpuValueText, snapshot.Cpu);
+        ApplyStatsRow(StatsRamRow, StatsRamValueText, snapshot.Ram);
+        ApplyStatsRow(StatsNetRow, StatsNetValueText, snapshot.Network);
     }
 
     private static void ApplyStatsRow(
         UIElement row,
         TextBlock valueText,
-        SparklineControl sparkline,
         SystemStatRowSnapshot? snapshot)
     {
         row.Visibility = snapshot is null ? Visibility.Collapsed : Visibility.Visible;
         if (snapshot is null)
         {
-            sparkline.Values = [];
             valueText.Text = "";
             valueText.ToolTip = null;
             return;
@@ -635,7 +633,6 @@ public partial class MainWindow : Window
 
         valueText.Text = snapshot.ValueText;
         valueText.ToolTip = snapshot.ValueText;
-        sparkline.Values = snapshot.Samples;
     }
 
     private void ShowMediaToast()
