@@ -5,6 +5,8 @@ public sealed class ClipboardUpdateQueue
     private uint _ignoredSequence;
     private uint? _pendingSequence;
 
+    public bool HasPending => _pendingSequence is not null;
+
     public void IgnoreSequence(uint sequence)
     {
         if (sequence != 0)

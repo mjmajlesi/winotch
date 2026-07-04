@@ -184,6 +184,19 @@ public class ClipboardHistoryTests
         Assert.Null(queue.Consume());
     }
 
+    [Fact]
+    public void UpdateQueueReportsPendingUpdateUntilConsumed()
+    {
+        var queue = new ClipboardUpdateQueue();
+
+        Assert.False(queue.HasPending);
+        queue.Enqueue(10);
+
+        Assert.True(queue.HasPending);
+        Assert.Equal((uint)10, queue.Consume());
+        Assert.False(queue.HasPending);
+    }
+
     private static ClipboardHistoryEntry Text(string value, DateTimeOffset? capturedAt = null) =>
         ClipboardHistoryEntry.FromText(value, capturedAt ?? Now)!;
 

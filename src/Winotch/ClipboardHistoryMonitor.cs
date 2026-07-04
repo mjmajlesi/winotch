@@ -148,7 +148,12 @@ public sealed class ClipboardHistoryMonitor : IDisposable
     private async void OnCoalesceTimerTick(object? sender, EventArgs e)
     {
         _coalesceTimer.Stop();
-        if (_reading || _updates.Consume() is null)
+        if (_reading)
+        {
+            return;
+        }
+
+        if (_updates.Consume() is null)
         {
             return;
         }
@@ -166,6 +171,10 @@ public sealed class ClipboardHistoryMonitor : IDisposable
         finally
         {
             _reading = false;
+            if (_updates.HasPending)
+            {
+                _coalesceTimer.Start();
+            }
         }
     }
 
