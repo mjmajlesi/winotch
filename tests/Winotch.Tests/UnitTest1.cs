@@ -218,6 +218,12 @@ public class StatusParsingTests
     }
 
     [Fact]
+    public void ForegroundShellClassesIncludeSecondaryTaskbar()
+    {
+        Assert.True(ForegroundWindowService.IsShellClass("Shell_SecondaryTrayWnd"));
+    }
+
+    [Fact]
     public void ForegroundModeUsesFullBarForMaximizedOrScreenFillingApp()
     {
         var monitor = new NativeRect(0, 0, 1920, 1080);
@@ -619,7 +625,9 @@ public class StatusParsingTests
     [InlineData(120, 120)]
     [InlineData(144, 144)]
     [InlineData(500, 500)]
-    [InlineData(501, 60)]
+    [InlineData(501, 501)]
+    [InlineData(540, 540)]
+    [InlineData(1001, 60)]
     public void RefreshRateFallsBackOnlyForInvalidValues(int refreshRate, int expected)
     {
         Assert.Equal(expected, DisplayRefreshRateService.NormalizeRefreshRate(refreshRate));
@@ -630,10 +638,21 @@ public class StatusParsingTests
     [InlineData(34, 1.25, 43)]
     [InlineData(34, 1.5, 51)]
     [InlineData(0, 1.0, 1)]
-    [InlineData(10, -1.0, 1)]
+    [InlineData(34, 0, 34)]
+    [InlineData(10, -1.0, 10)]
     public void AppBarHeightUsesPhysicalPixels(double dip, double dpiScale, int expected)
     {
         Assert.Equal(expected, AppBarReservationService.ToPhysicalPixels(dip, dpiScale));
+    }
+
+    [Fact]
+    public void AppBarTopReservationKeepsNegotiatedTopEdge()
+    {
+        var negotiated = new NativeRect(0, 40, 1920, 80);
+
+        var reserved = AppBarReservationService.ApplyTopReservationHeight(negotiated, 34);
+
+        Assert.Equal(new NativeRect(0, 40, 1920, 74), reserved);
     }
 
     [Fact]

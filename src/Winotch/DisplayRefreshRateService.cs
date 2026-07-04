@@ -15,7 +15,7 @@ public static class DisplayRefreshRateService
     }
 
     public static int NormalizeRefreshRate(int refreshRate) =>
-        refreshRate is >= 30 and <= 500 ? refreshRate : 60;
+        refreshRate is >= 30 and <= 1000 ? refreshRate : 60;
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern bool EnumDisplaySettings(string? deviceName, int modeNum, ref DevMode devMode);

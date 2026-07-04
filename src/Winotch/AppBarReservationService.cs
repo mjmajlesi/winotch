@@ -41,8 +41,7 @@ public sealed class AppBarReservationService : IDisposable
             monitor.Bounds.Top + heightPixels);
 
         SHAppBarMessage(AbmQueryPos, ref data);
-        data.Rect.Top = monitor.Bounds.Top;
-        data.Rect.Bottom = monitor.Bounds.Top + heightPixels;
+        data.Rect = ApplyTopReservationHeight(data.Rect, heightPixels);
         SHAppBarMessage(AbmSetPos, ref data);
     }
 
@@ -61,7 +60,10 @@ public sealed class AppBarReservationService : IDisposable
     public void Dispose() => Release();
 
     public static int ToPhysicalPixels(double dip, double dpiScale) =>
-        Math.Max(1, (int)Math.Ceiling(dip * Math.Max(0.1, dpiScale)));
+        Math.Max(1, (int)Math.Ceiling(dip * (dpiScale > 0 ? dpiScale : 1)));
+
+    public static NativeRect ApplyTopReservationHeight(NativeRect rect, int heightPixels) =>
+        new(rect.Left, rect.Top, rect.Right, rect.Top + heightPixels);
 
     private AppBarData CreateData() => new()
     {

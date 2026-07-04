@@ -141,8 +141,8 @@ public static class ForegroundWindowService
         return processId == Environment.ProcessId;
     }
 
-    private static bool IsShellClass(string className) =>
-        className is "Progman" or "WorkerW" or "Shell_TrayWnd";
+    public static bool IsShellClass(string className) =>
+        className is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd";
 
     private static string GetClassName(IntPtr window)
     {
