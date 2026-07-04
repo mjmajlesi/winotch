@@ -130,6 +130,24 @@ public class MonitorTargetingTests
     }
 
     [Fact]
+    public void ExpandedPlacementUsesWpfDipWidthOnScaledPrimaryMonitor()
+    {
+        var monitor = new MonitorSnapshot(
+            "primary",
+            new NativeRect(0, 0, 1829, 1143),
+            new NativeRect(0, 0, 1829, 1103),
+            IsPrimary: true,
+            DpiScaleX: 1.25,
+            DpiScaleY: 1.25);
+
+        var placed = ShellMetrics.PlaceOnMonitor(ShellMetrics.Expanded(monitor.WidthDip), monitor);
+
+        Assert.Equal(241.6, placed.Left, precision: 1);
+        Assert.Equal(1221.6, placed.Left + placed.Width, precision: 1);
+        Assert.True(placed.Left + placed.Width <= monitor.LeftDip + monitor.WidthDip);
+    }
+
+    [Fact]
     public void ForegroundPollIntervalStaysResponsiveForMonitorFollowing()
     {
         Assert.InRange(ShellAnimationTiming.ForegroundPollMilliseconds, 100, 250);
