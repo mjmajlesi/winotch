@@ -61,7 +61,7 @@ flowchart LR
     Expanded --> Notifications["Notifications"]
     Expanded --> Controls["Control Center"]
     Expanded --> Clipboard["Clipboard History"]
-    Expanded --> Stats["CPU/RAM/Network Sparklines"]
+    Expanded --> Stats["CPU/RAM/Network Values"]
     Controls --> CameraMirror["Camera Mirror Flyout"]
 ```
 
@@ -115,7 +115,7 @@ The microphone row toggles mute on the default capture endpoint and shares the s
 
 ## System Stats
 
-The expanded System column includes compact CPU, RAM, and network rows with 60-sample sparklines. `SystemStatsService` owns the session: expanding the notch creates and primes the CPU performance counter, resets RAM/network sample buffers, and starts one-second reads when stats are enabled; disabling stats, collapsing, pausing, or closing stops the timer and disposes the counter so the resting notch performs no stats polling.
+The expanded System column includes compact CPU, RAM, and network rows with text values. `SystemStatsService` owns the session: expanding the notch creates and primes the CPU performance counter, resets RAM/network sample buffers, and starts one-second reads when stats are enabled; disabling stats, collapsing, pausing, or closing stops the timer and disposes the counter so the resting notch performs no stats polling.
 
 CPU uses `Processor Information\% Processor Utility\_Total` with `Processor\% Processor Time\_Total` fallback. RAM reads `GlobalMemoryStatusEx`. Network rates sum deltas from active physical adapters and treat missing, new, or reset counters as zero for that sample. Counter creation/read failures hide the affected row instead of crashing the shell.
 
@@ -177,7 +177,7 @@ The automated suite focuses on deterministic logic that would otherwise surface 
 - Priority status transition handling for low battery, charger changes, Wi-Fi loss/reconnect, Bluetooth connects, mic/camera activation, queued alerts, and privacy active-use detection.
 - Settings JSON defaults, roundtrip, corrupt-file fallback, locked-file fallback, change events, concurrent saves, toast-duration scaling, and startup run-key formatting/stale-path repair.
 - Control-center app naming fallbacks, output device ordering/default marking, microphone pill state mapping, brightness normalization/clamping, and debounced brightness writes.
-- System stats fixed windows, network delta/reset handling, byte/RAM formatting, and sparkline point mapping.
+- System stats fixed windows, network delta/reset handling, and byte/RAM formatting.
 - Camera mirror lifecycle transitions, cover/crop layout math, and self camera-alert suppression.
 - Foreground mode heuristics for desktop, own window, maximized apps, screen-filling apps, and near-threshold windows.
 - Fallback app-window filtering so hidden, minimized, shell, own, and tiny windows cannot force full-bar mode.
