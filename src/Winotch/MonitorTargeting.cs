@@ -12,13 +12,13 @@ public readonly record struct MonitorSnapshot(
     double DpiScaleX,
     double DpiScaleY)
 {
-    public double LeftDip => Bounds.Left;
-    public double TopDip => Bounds.Top;
-    public double WidthDip => Bounds.Width;
-    public double WorkAreaLeftDip => WorkingArea.Left;
-    public double WorkAreaTopDip => WorkingArea.Top;
-    public double WorkAreaRightDip => WorkingArea.Right;
-    public double WorkAreaBottomDip => WorkingArea.Bottom;
+    public double LeftDip => ToDip(Bounds.Left, DpiScaleX);
+    public double TopDip => ToDip(Bounds.Top, DpiScaleY);
+    public double WidthDip => ToDip(Bounds.Width, DpiScaleX);
+    public double WorkAreaLeftDip => ToDip(WorkingArea.Left, DpiScaleX);
+    public double WorkAreaTopDip => ToDip(WorkingArea.Top, DpiScaleY);
+    public double WorkAreaRightDip => ToDip(WorkingArea.Right, DpiScaleX);
+    public double WorkAreaBottomDip => ToDip(WorkingArea.Bottom, DpiScaleY);
 
     public bool Contains(Point point) =>
         point.X >= Bounds.Left &&
@@ -26,6 +26,7 @@ public readonly record struct MonitorSnapshot(
         point.Y >= Bounds.Top &&
         point.Y < Bounds.Bottom;
 
+    private static double ToDip(int value, double scale) => value / (scale > 0 ? scale : 1);
 }
 
 public readonly record struct MonitorTargetRequest(

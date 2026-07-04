@@ -106,12 +106,12 @@ public class MonitorTargetingTests
             Top = monitor.TopDip
         };
 
-        Assert.Equal(1280, monitor.LeftDip);
-        Assert.Equal(1280, monitor.WidthDip);
-        Assert.Equal(2560, monitor.WorkAreaRightDip);
-        Assert.Equal(933, monitor.WorkAreaBottomDip);
+        Assert.Equal(853.33, monitor.LeftDip, precision: 2);
+        Assert.Equal(853.33, monitor.WidthDip, precision: 2);
+        Assert.Equal(1706.67, monitor.WorkAreaRightDip, precision: 2);
+        Assert.Equal(622, monitor.WorkAreaBottomDip);
         Assert.Equal(1.5, monitor.DpiScaleY);
-        Assert.Equal(1798, geometry.Left);
+        Assert.Equal(1158, geometry.Left, precision: 2);
         Assert.Equal(0, geometry.Top);
     }
 
