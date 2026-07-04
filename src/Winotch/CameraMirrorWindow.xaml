@@ -20,6 +20,7 @@
             <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
             <Setter Property="Foreground" Value="{StaticResource NotchText}" />
             <Setter Property="Background" Value="{StaticResource NotchPanel}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="10,5" />
             <Setter Property="Cursor" Value="Hand" />
@@ -28,19 +29,25 @@
                     <ControlTemplate TargetType="{x:Type ToggleButton}">
                         <Border x:Name="ToggleChrome"
                                 Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="9"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ToggleChrome" Property="Background" Value="{StaticResource NotchPanelHover}" />
-                            </Trigger>
                             <Trigger Property="IsChecked" Value="False">
                                 <Setter TargetName="ToggleChrome" Property="Background" Value="{StaticResource NotchPanelPressed}" />
                             </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ToggleChrome" Property="Background" Value="{StaticResource NotchPanelHover}" />
+                            </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="ToggleChrome" Property="Background" Value="{StaticResource NotchStroke}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="ToggleChrome" Property="BorderBrush" Value="{StaticResource NotchMutedText}" />
+                                <Setter TargetName="ToggleChrome" Property="BorderThickness" Value="1" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
