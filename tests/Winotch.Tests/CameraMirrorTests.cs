@@ -1,3 +1,6 @@
+using WpfRect = System.Windows.Rect;
+using WpfSize = System.Windows.Size;
+
 namespace Winotch.Tests;
 
 public class CameraMirrorTests
@@ -50,8 +53,8 @@ public class CameraMirrorTests
         double expectedY)
     {
         var placement = CameraMirrorLayout.AspectFit(
-            new CameraMirrorSize(sourceWidth, sourceHeight),
-            new CameraMirrorSize(boundsWidth, boundsHeight));
+            new WpfSize(sourceWidth, sourceHeight),
+            new WpfSize(boundsWidth, boundsHeight));
 
         Assert.Equal(expectedWidth, placement.Width, precision: 2);
         Assert.Equal(expectedHeight, placement.Height, precision: 2);
@@ -63,10 +66,10 @@ public class CameraMirrorTests
     public void AspectFitReturnsEmptyForUnavailableDimensions()
     {
         var placement = CameraMirrorLayout.AspectFit(
-            new CameraMirrorSize(0, 1080),
-            new CameraMirrorSize(320, 240));
+            new WpfSize(0, 1080),
+            new WpfSize(320, 240));
 
-        Assert.Equal(CameraMirrorPlacement.Empty, placement);
+        Assert.Equal(WpfRect.Empty, placement);
     }
 
     [Fact]

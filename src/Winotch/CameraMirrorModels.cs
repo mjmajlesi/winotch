@@ -1,3 +1,6 @@
+using WpfRect = System.Windows.Rect;
+using WpfSize = System.Windows.Size;
+
 namespace Winotch;
 
 public enum CameraMirrorPhase
@@ -45,29 +48,19 @@ public static class CameraMirrorLifecycle
     public static CameraMirrorState Close() => CameraMirrorState.Closed;
 }
 
-public readonly record struct CameraMirrorSize(double Width, double Height)
-{
-    public bool IsUsable => Width > 0 && Height > 0;
-}
-
-public readonly record struct CameraMirrorPlacement(double X, double Y, double Width, double Height)
-{
-    public static CameraMirrorPlacement Empty => new(0, 0, 0, 0);
-}
-
 public static class CameraMirrorLayout
 {
-    public static CameraMirrorPlacement AspectFit(CameraMirrorSize source, CameraMirrorSize bounds)
+    public static WpfRect AspectFit(WpfSize source, WpfSize bounds)
     {
-        if (!source.IsUsable || !bounds.IsUsable)
+        if (source.Width <= 0 || source.Height <= 0 || bounds.Width <= 0 || bounds.Height <= 0)
         {
-            return CameraMirrorPlacement.Empty;
+            return WpfRect.Empty;
         }
 
         var scale = Math.Min(bounds.Width / source.Width, bounds.Height / source.Height);
         var width = source.Width * scale;
         var height = source.Height * scale;
-        return new CameraMirrorPlacement(
+        return new WpfRect(
             (bounds.Width - width) / 2,
             (bounds.Height - height) / 2,
             width,

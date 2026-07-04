@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using WpfSize = System.Windows.Size;
 
 namespace Winotch;
 
@@ -14,7 +15,7 @@ public partial class CameraMirrorWindow : Window
     private static readonly IEasingFunction Easing = new QuarticEase { EasingMode = EasingMode.EaseOut };
     private readonly CameraMirrorService _cameraMirror;
     private WriteableBitmap? _previewBitmap;
-    private CameraMirrorSize _frameSize;
+    private WpfSize _frameSize;
     private bool _closing;
 
     public CameraMirrorWindow(CameraMirrorService cameraMirror)
@@ -132,7 +133,7 @@ public partial class CameraMirrorWindow : Window
             frame.BgraPixels,
             frame.Stride,
             0);
-        _frameSize = new CameraMirrorSize(frame.PixelWidth, frame.PixelHeight);
+        _frameSize = new WpfSize(frame.PixelWidth, frame.PixelHeight);
         ApplyPreviewLayout();
     }
 
@@ -145,7 +146,7 @@ public partial class CameraMirrorWindow : Window
     {
         var placement = CameraMirrorLayout.AspectFit(
             _frameSize,
-            new CameraMirrorSize(PreviewViewport.ActualWidth, PreviewViewport.ActualHeight));
+            new WpfSize(PreviewViewport.ActualWidth, PreviewViewport.ActualHeight));
         PreviewImage.Width = placement.Width;
         PreviewImage.Height = placement.Height;
         Canvas.SetLeft(PreviewImage, placement.X);
