@@ -15,6 +15,7 @@ public sealed class NotificationService : IDisposable
     private readonly object _gate = new();
     private readonly List<NotificationItem> _liveToasts = [];
     private bool _watchingLiveToasts;
+    private volatile bool _disposed;
 
     public event EventHandler? NotificationsChanged;
 
@@ -92,25 +93,39 @@ public sealed class NotificationService : IDisposable
 
     public void Dispose()
     {
+        _disposed = true;
         if (!_watchingLiveToasts)
         {
             return;
         }
 
-        Automation.RemoveAutomationEventHandler(
-            WindowPattern.WindowOpenedEvent,
-            AutomationElement.RootElement,
-            OnWindowOpened);
+        try
+        {
+            Automation.RemoveAutomationEventHandler(
+                WindowPattern.WindowOpenedEvent,
+                AutomationElement.RootElement,
+                OnWindowOpened);
+        }
+        catch
+        {
+        }
+
+        _watchingLiveToasts = false;
     }
 
     private async void OnWindowOpened(object sender, AutomationEventArgs e)
     {
-        if (sender is not AutomationElement element)
+        if (_disposed || sender is not AutomationElement element)
         {
             return;
         }
 
         await Task.Delay(250);
+        if (_disposed)
+        {
+            return;
+        }
+
         var item = TryReadLiveToast(element);
         if (item is null)
         {
@@ -119,6 +134,11 @@ public sealed class NotificationService : IDisposable
 
         lock (_gate)
         {
+            if (_disposed)
+            {
+                return;
+            }
+
             if (_liveToasts.Any(existing =>
                 existing.App == item.App &&
                 existing.Title == item.Title &&
@@ -135,7 +155,10 @@ public sealed class NotificationService : IDisposable
             }
         }
 
-        NotificationsChanged?.Invoke(this, EventArgs.Empty);
+        if (!_disposed)
+        {
+            NotificationsChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     private static NotificationItem? TryReadLiveToast(AutomationElement element)

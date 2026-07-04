@@ -299,12 +299,23 @@ public class StatusParsingTests
     [Theory]
     [InlineData(UserNotificationState.AcceptsNotifications, false)]
     [InlineData(UserNotificationState.QuietTime, true)]
-    [InlineData(UserNotificationState.Busy, false)]
-    [InlineData(UserNotificationState.PresentationMode, false)]
-    [InlineData(UserNotificationState.RunningDirect3DFullScreen, false)]
+    [InlineData(UserNotificationState.NotPresent, true)]
+    [InlineData(UserNotificationState.Busy, true)]
+    [InlineData(UserNotificationState.PresentationMode, true)]
+    [InlineData(UserNotificationState.RunningDirect3DFullScreen, true)]
+    [InlineData(UserNotificationState.App, false)]
     public void NotificationSilenceUsesShellNotificationState(UserNotificationState state, bool expected)
     {
         Assert.Equal(expected, NotificationSilenceService.IsShellNotificationSuppressed(state));
+    }
+
+    [Fact]
+    public void NotificationServiceDisposeIsIdempotent()
+    {
+        var service = new NotificationService();
+
+        service.Dispose();
+        service.Dispose();
     }
 
     [Fact]
