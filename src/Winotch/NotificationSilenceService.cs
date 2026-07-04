@@ -35,7 +35,11 @@ public static class NotificationSilenceService
     public static bool IsGloballySilenced(int? globalToastsEnabled) => globalToastsEnabled == 0;
 
     public static bool IsShellNotificationSuppressed(UserNotificationState state) =>
-        state == UserNotificationState.QuietTime;
+        state is UserNotificationState.NotPresent
+            or UserNotificationState.Busy
+            or UserNotificationState.RunningDirect3DFullScreen
+            or UserNotificationState.PresentationMode
+            or UserNotificationState.QuietTime;
 
     private static bool TryGetShellNotificationState(out UserNotificationState state) =>
         SHQueryUserNotificationState(out state) == 0;
