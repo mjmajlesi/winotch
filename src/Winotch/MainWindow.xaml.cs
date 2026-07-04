@@ -50,6 +50,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitializeFileShelf();
         _trayIcon = new TrayIconService(this, _settings, _startup);
         _settings.Changed += Settings_Changed;
         _clockTimer.Tick += (_, _) =>
@@ -84,6 +85,7 @@ public partial class MainWindow : Window
         _clipboardHistory.Start(this);
         RefreshClipboardPanel();
         await ApplyAccountPictureAsync();
+        await LoadFileShelfAsync();
         await RefreshStatusAsync();
     }
 
@@ -379,6 +381,7 @@ public partial class MainWindow : Window
         }
 
         _expanded = expanded;
+        UpdateShelfMiniIndicator();
         _expandedReveal?.Cancel();
         _expandedReveal?.Dispose();
         _expandedReveal = null;
@@ -576,6 +579,7 @@ public partial class MainWindow : Window
             return;
         }
 
+        _currentShellMode = mode;
         var isFullBar = mode == ShellMode.FullBar;
         var geometry = ShellMetrics.ForMode(isFullBar, PrimaryScreenWidthDip());
 
@@ -603,6 +607,7 @@ public partial class MainWindow : Window
             ShellAnimator.Animate(DetailPanel, OpacityProperty, 0, _animationFrameRate);
             ShellAnimator.AnimateShell(this, NotchShell, geometry, _animationFrameRate);
             SetMouseTransparent(isFullBar);
+            UpdateShelfMiniIndicator();
             return;
         }
 
@@ -615,6 +620,7 @@ public partial class MainWindow : Window
         NotchShell.Width = geometry.Width;
         NotchShell.Height = geometry.ShellHeight;
         SetMouseTransparent(isFullBar);
+        UpdateShelfMiniIndicator();
     }
 
     private void ApplyHeaderDensity(bool isFullBar)
@@ -838,6 +844,7 @@ public partial class MainWindow : Window
         _expandedReveal?.Dispose();
         _compactToastHide?.Cancel();
         _compactToastHide?.Dispose();
+        DisposeFileShelf();
         _trayIcon.Dispose();
         _settings.Changed -= Settings_Changed;
         _appBar.Dispose();

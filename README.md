@@ -1,6 +1,6 @@
 # Winotch
 
-Winotch is a native Windows notch overlay. It stays centered at the top of the primary screen and shows time, date, battery, Wi-Fi, volume, current media, Windows notifications, and a persistent focus timer in a compact black shell that expands on hover. Media track changes, unsilenced Windows notifications, focus phase completions, and priority system status changes use brief compact toasts.
+Winotch is a native Windows notch overlay. It stays centered at the top of the primary screen and shows time, date, battery, Wi-Fi, volume, current media, Windows notifications, a persistent focus timer, and a file shelf in a compact black shell that expands on hover. Media track changes, unsilenced Windows notifications, focus phase completions, and priority system status changes use brief compact toasts.
 
 ## Stack
 
@@ -34,6 +34,8 @@ Hover the notch to expand it. The volume slider changes the system master volume
 
 The tray icon opens Settings, pauses/resumes the overlay, toggles Start with Windows, and exits the app. Settings changes apply live and persist as indented JSON at `%LOCALAPPDATA%\Winotch\settings.json`; corrupt JSON is moved aside as `settings.bad.json` and defaults are used.
 
+Drag files or folders from Explorer onto the notch to place their full paths on the shelf. The expanded panel shows shelved items with shell icons, truncated names, full-path tooltips, per-item remove buttons, a Clear action, and a drag-all affordance. Drag an item, or all existing items, back out to Explorer or another app to start a normal Windows file drop. Shelf state persists at `%LOCALAPPDATA%\Winotch\shelf.json`; missing or corrupt shelf data loads as an empty shelf.
+
 ## Test
 
 Run the full regression suite before sharing a build:
@@ -42,7 +44,7 @@ Run the full regression suite before sharing a build:
 dotnet test Winotch.slnx
 ```
 
-The tests cover Wi-Fi parsing, battery fill/color thresholds, focus timer state transitions/persistence/formatting, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, clipboard history preview/privacy/dedupe behavior, priority status alert transitions, settings persistence/startup helpers, shell mode/fullscreen heuristics, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
+The tests cover Wi-Fi parsing, battery fill/color thresholds, focus timer state transitions/persistence/formatting, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, clipboard history preview/privacy/dedupe behavior, priority status alert transitions, file shelf model/persistence/display behavior, settings persistence/startup helpers, shell mode/fullscreen heuristics, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
 
 ## Clipboard History
 

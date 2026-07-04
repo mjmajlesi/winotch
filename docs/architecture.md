@@ -20,6 +20,7 @@ flowchart TD
     Settings --> Window
     Window --> Clipboard["Clipboard Format Listener"]
     Window --> Focus["Focus Timer State + JSON Store"]
+    Window --> Shelf["File Shelf JSON Store"]
     Battery --> Window
     Audio --> Window
     Media --> Window
@@ -28,6 +29,7 @@ flowchart TD
     Priority --> Window
     Clipboard --> Window
     Focus --> Window
+    Shelf --> Window
 ```
 
 ## UI System
@@ -47,6 +49,7 @@ flowchart LR
     Expanded --> Notifications["Notifications"]
     Expanded --> Controls["Volume and Wi-Fi Controls"]
     Expanded --> Clipboard["Clipboard History"]
+    Expanded --> Shelf["File Shelf"]
 ```
 
 ## Design Tokens
@@ -109,6 +112,12 @@ Start with Windows is backed by `HKCU\Software\Microsoft\Windows\CurrentVersion\
 
 The focus timer is a pure timestamp-driven state machine persisted as JSON under `%LOCALAPPDATA%\Winotch\focus-timer.json`. The UI refreshes it on the existing one-second clock timer and on power resume, then recomputes remaining time from wall clock instead of accumulating ticks. Focus phases always advance into a break; break completion starts another focus phase only when auto-cycle is enabled. Completion messages reuse the compact notification toast surface and collapse multiple closed-app completions to one visible toast on load.
 
+## File Shelf
+
+The notch window accepts Explorer `CF_HDROP` file drags. During drag enter/over, the normal expanded shell animation opens the notch and shows a highlighted drop target. Dropping stores only full paths in `FileShelf`, then persists them as JSON at `%LOCALAPPDATA%\Winotch\shelf.json` through `FileShelfStore`; missing or corrupt JSON falls back to an empty shelf.
+
+The expanded panel renders the shelf as horizontal tiles with shell icons from `SHGetFileInfo`, truncated display names, full-path tooltips, per-item remove buttons, a Clear action, and a drag-all button. Dragging a tile, or all existing shelf items, creates a WPF `DataObject` with `DataFormats.FileDrop` and calls `DragDrop.DoDragDrop` so Explorer, browsers, chat apps, and other Windows drop targets receive a real OS file drag. Dragging out does not remove shelf entries by default.
+
 ## Test Strategy
 
 The automated suite focuses on deterministic logic that would otherwise surface as visual bugs:
@@ -121,6 +130,7 @@ The automated suite focuses on deterministic logic that would otherwise surface 
 - Clipboard history cap/dedupe/delete/clear behavior, preview generation, relative timestamps, privacy exclusion formats, and self-copy update suppression.
 - Priority status transition handling for low battery, charger changes, Wi-Fi loss/reconnect, Bluetooth connects, mic/camera activation, queued alerts, and privacy active-use detection.
 - Settings JSON defaults, roundtrip, corrupt-file fallback, locked-file fallback, change events, concurrent saves, toast-duration scaling, and startup run-key formatting/stale-path repair.
+- File shelf path de-duplication, JSON roundtrip and corrupt-file fallback, missing-file classification, deterministic display-name truncation, and visible-tile overflow.
 - Foreground mode heuristics for desktop, own window, maximized apps, screen-filling apps, and near-threshold windows.
 - Fallback app-window filtering so hidden, minimized, shell, own, and tiny windows cannot force full-bar mode.
 - App-bar DIP-to-physical-pixel conversion across DPI scales.
