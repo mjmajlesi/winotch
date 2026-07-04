@@ -242,7 +242,6 @@ public sealed record CalendarSettings
 
 public sealed record FeatureSettings
 {
-    public bool FileShelfEnabled { get; init; } = true;
     public bool ClipboardHistoryEnabled { get; init; } = true;
     public bool ShowAppMixer { get; init; } = true;
     public bool SystemStatsEnabled { get; init; } = true;

@@ -47,7 +47,6 @@ public partial class SettingsWindow : Window
         NotificationToastsToggle.IsChecked = settings.Toasts.NotificationToastsEnabled;
         PriorityAlertsToggle.IsChecked = settings.Toasts.PriorityAlertsEnabled;
         SelectDuration(settings.Toasts.DurationScale);
-        FileShelfEnabledToggle.IsChecked = settings.Features.FileShelfEnabled;
         ClipboardHistoryEnabledToggle.IsChecked = settings.Features.ClipboardHistoryEnabled;
         ShowAppMixerToggle.IsChecked = settings.Features.ShowAppMixer;
         SystemStatsEnabledToggle.IsChecked = settings.Features.SystemStatsEnabled;
@@ -108,7 +107,6 @@ public partial class SettingsWindow : Window
         {
             Features = settings.Features with
             {
-                FileShelfEnabled = FileShelfEnabledToggle.IsChecked == true,
                 ClipboardHistoryEnabled = ClipboardHistoryEnabledToggle.IsChecked == true,
                 ShowAppMixer = ShowAppMixerToggle.IsChecked == true,
                 SystemStatsEnabled = SystemStatsEnabledToggle.IsChecked == true,

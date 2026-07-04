@@ -15,7 +15,6 @@ public class SettingsServiceTests
         Assert.Equal(ToastDurationScale.Normal, service.Current.Toasts.DurationScale);
         Assert.False(service.Current.Calendar.Enabled);
         Assert.Empty(service.Current.Calendar.SubscriptionUrls);
-        Assert.True(service.Current.Features.FileShelfEnabled);
         Assert.True(service.Current.Features.ClipboardHistoryEnabled);
         Assert.True(service.Current.Features.ShowAppMixer);
         Assert.True(service.Current.Features.SystemStatsEnabled);
@@ -73,7 +72,6 @@ public class SettingsServiceTests
         var service = new SettingsService(temp.SettingsPath);
 
         Assert.False(service.Current.General.ShowDate);
-        Assert.True(service.Current.Features.FileShelfEnabled);
         Assert.True(service.Current.Features.ClipboardHistoryEnabled);
         Assert.True(service.Current.Features.ShowAppMixer);
         Assert.True(service.Current.Features.SystemStatsEnabled);
