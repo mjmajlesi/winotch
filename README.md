@@ -71,7 +71,7 @@ The camera button in the expanded control center opens a small live mirror flyou
 Run the full regression suite before sharing a build:
 
 ```powershell
-dotnet test Winotch.slnx
+dotnet test
 ```
 
 The tests cover Wi-Fi parsing, battery fill/color thresholds, focus timer state transitions/persistence/formatting, ICS parsing/recurrence/timezone/join-link/countdown behavior, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, clipboard history preview/privacy/dedupe behavior, priority status alert transitions, control-center naming/device/brightness/debounce state logic, system stats ring buffers/rate math/formatting/sparkline mapping, file shelf model/persistence/display behavior, camera mirror lifecycle/layout/suppression behavior, settings persistence/startup helpers, shell mode/fullscreen heuristics, active-monitor selection, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.

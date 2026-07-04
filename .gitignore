@@ -13,9 +13,14 @@ publish/
 
 # Logs and local artifacts
 *.log
+*.binlog
 *.tmp
+*.trx
+*.coverage
 TestResults/
 coverage/
+coverage*.xml
+screenshots/
 winotch-qa.png
 winotch-*-qa.png
 

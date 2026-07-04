@@ -3,7 +3,7 @@ using Windows.Storage;
 
 namespace Winotch.Tests;
 
-public class StatusParsingTests
+public class StatusShellTests
 {
     [Fact]
     public void NetshParserReadsConnectedWifiAndSignal()
