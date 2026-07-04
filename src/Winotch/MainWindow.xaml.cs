@@ -25,6 +25,7 @@ public partial class MainWindow : Window
     private readonly AppBarReservationService _appBar = new();
     private readonly PriorityStatusService _priorityStatus = new();
     private readonly PriorityStatusTracker _priorityAlerts = new();
+    private readonly ClipboardHistoryMonitor _clipboardHistory = new();
     private bool _expanded;
     private bool _compactToastVisible;
     private bool _updatingVolume;
@@ -44,6 +45,10 @@ public partial class MainWindow : Window
         _collapseTimer.Tick += (_, _) => CollapseAfterPointerExit();
         _notifications.NotificationsChanged += (_, _) => Dispatcher.Invoke(async () => await RefreshStatusAsync());
         _media.MediaChanged += (_, _) => Dispatcher.Invoke(async () => await RefreshStatusAsync());
+        _clipboardHistory.HistoryChanged += OnClipboardHistoryChanged;
+        ClipboardPanel.CopyRequested += ClipboardPanel_CopyRequested;
+        ClipboardPanel.DeleteRequested += ClipboardPanel_DeleteRequested;
+        ClipboardPanel.ClearRequested += ClipboardPanel_ClearRequested;
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
         SystemEvents.PowerModeChanged += OnPowerModeChanged;
     }
@@ -56,6 +61,8 @@ public partial class MainWindow : Window
         _clockTimer.Start();
         _statusTimer.Start();
         _shellTimer.Start();
+        _clipboardHistory.Start(this);
+        RefreshClipboardPanel();
         await ApplyAccountPictureAsync();
         await RefreshStatusAsync();
     }
@@ -80,6 +87,7 @@ public partial class MainWindow : Window
         DateText.Text = now.ToString("ddd, MMM d");
         LargeTimeText.Text = now.ToString("HH:mm:ss");
         LargeDateText.Text = now.ToString("dddd, MMMM d");
+        ClipboardPanel.RefreshTimes();
     }
 
     private async Task RefreshStatusAsync()
@@ -249,7 +257,7 @@ public partial class MainWindow : Window
         NotchShell.CornerRadius = new CornerRadius(0, 0, 34, 34);
         ShellAnimator.Clear(this, NotchShell, DetailPanel);
         DetailPanel.Opacity = 0;
-        ShellAnimator.AnimateShell(this, NotchShell, ShellMetrics.Expanded(SystemParameters.PrimaryScreenWidth), _animationFrameRate);
+        ShellAnimator.AnimateShell(this, NotchShell, ShellMetrics.Expanded(PrimaryScreenWidthDip()), _animationFrameRate);
         _expandedReveal = new CancellationTokenSource();
         _ = RevealExpandedContentAsync(_expandedReveal.Token);
     }
@@ -327,7 +335,7 @@ public partial class MainWindow : Window
         NotchShell.Padding = new Thickness(10, 4, 10, 6);
         NotchShell.CornerRadius = new CornerRadius(0, 0, 24, 24);
         ShellAnimator.Clear(this, NotchShell, DetailPanel);
-        ShellAnimator.AnimateShell(this, NotchShell, ShellMetrics.MediaToast(SystemParameters.PrimaryScreenWidth), _animationFrameRate);
+        ShellAnimator.AnimateShell(this, NotchShell, ShellMetrics.MediaToast(PrimaryScreenWidthDip()), _animationFrameRate);
         panel.Opacity = 0;
         ShellAnimator.Show(panel, _animationFrameRate);
         _ = HideCompactToastAfterDelayAsync(_compactToastHide.Token);
@@ -419,7 +427,7 @@ public partial class MainWindow : Window
         }
 
         var isFullBar = mode == ShellMode.FullBar;
-        var geometry = ShellMetrics.ForMode(isFullBar, SystemParameters.PrimaryScreenWidth);
+        var geometry = ShellMetrics.ForMode(isFullBar, PrimaryScreenWidthDip());
 
         ShellAnimator.Hide(DateText);
         ClockGroup.Visibility = Visibility.Visible;
@@ -473,6 +481,12 @@ public partial class MainWindow : Window
         }
     }
 
+    private double PrimaryScreenWidthDip()
+    {
+        var dpiScale = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice.M11 ?? 1;
+        return ShellMetrics.ToDeviceIndependentWidth(SystemParameters.PrimaryScreenWidth, dpiScale);
+    }
+
     private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_updatingVolume || !IsLoaded)
@@ -520,6 +534,34 @@ public partial class MainWindow : Window
         await RunNotificationActionAsync(1);
     }
 
+    private void OnClipboardHistoryChanged(object? sender, EventArgs e)
+    {
+        Dispatcher.Invoke(RefreshClipboardPanel);
+    }
+
+    private void RefreshClipboardPanel()
+    {
+        ClipboardPanel.SetItems(_clipboardHistory.Items);
+    }
+
+    private void ClipboardPanel_CopyRequested(object? sender, ClipboardHistoryEntry entry)
+    {
+        if (_clipboardHistory.CopyToClipboard(entry.Id))
+        {
+            ClipboardPanel.ShowCopied(entry.Id);
+        }
+    }
+
+    private void ClipboardPanel_DeleteRequested(object? sender, Guid id)
+    {
+        _clipboardHistory.Delete(id);
+    }
+
+    private void ClipboardPanel_ClearRequested(object? sender, EventArgs e)
+    {
+        _clipboardHistory.Clear();
+    }
+
     private async Task RunMediaActionAsync(Func<Task> action)
     {
         await action();
@@ -546,6 +588,7 @@ public partial class MainWindow : Window
         _compactToastHide?.Dispose();
         _appBar.Dispose();
         _notifications.Dispose();
+        _clipboardHistory.Dispose();
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         base.OnClosed(e);
