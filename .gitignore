@@ -21,6 +21,7 @@ TestResults/
 coverage/
 coverage*.xml
 screenshots/
+qa-screenshots/
 winotch-qa.png
 winotch-*-qa.png
 
