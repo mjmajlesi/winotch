@@ -5,8 +5,8 @@ public readonly record struct ShellGeometry(double Width, double ShellHeight, do
 public static class ShellMetrics
 {
     public const double MiniWidth = 220;
-    public const double MiniShellHeight = 36;
-    public const double MiniWindowHeight = 42;
+    public const double MiniShellHeight = 40;
+    public const double MiniWindowHeight = 46;
     public const double FullBarShellHeight = 32;
     public const double FullBarWindowHeight = 34;
     public const double ExpandedWidth = 840;

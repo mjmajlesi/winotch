@@ -262,7 +262,7 @@ public partial class MainWindow : Window
         ClockGroup.HorizontalAlignment = isFullBar ? System.Windows.HorizontalAlignment.Left : System.Windows.HorizontalAlignment.Center;
         HeaderRow.Height = new GridLength(isFullBar ? 28 : 28);
         NotchShell.Padding = isFullBar ? new Thickness(10, 2, 10, 2) : new Thickness(10, 4, 10, 6);
-        NotchShell.CornerRadius = isFullBar ? new CornerRadius(0) : new CornerRadius(0, 0, 18, 18);
+        NotchShell.CornerRadius = isFullBar ? new CornerRadius(0) : new CornerRadius(0, 0, 20, 20);
         if (isFullBar)
         {
             _appBar.ReserveTop(this, geometry.WindowHeight);

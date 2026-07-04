@@ -20,11 +20,11 @@
     <Grid Background="Transparent">
         <Border x:Name="NotchShell"
                 Width="220"
-                Height="36"
+                Height="40"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Stretch"
                 Background="{StaticResource NotchBlack}"
-                CornerRadius="0,0,18,18"
+                CornerRadius="0,0,20,20"
                 Padding="10,4,10,6"
                 SnapsToDevicePixels="True">
             <Border.Effect>
@@ -48,7 +48,7 @@
                             <TextBlock Text="W" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <StackPanel>
-                            <TextBlock x:Name="TimeText" FontSize="17" FontWeight="SemiBold" LineHeight="20" />
+                            <TextBlock x:Name="TimeText" FontSize="17" FontWeight="SemiBold" LineHeight="22" />
                             <TextBlock x:Name="DateText" Foreground="{StaticResource NotchMutedText}" FontSize="12" LineHeight="15" Margin="0,1,0,0" />
                         </StackPanel>
                     </StackPanel>
