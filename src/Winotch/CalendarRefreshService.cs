@@ -6,7 +6,7 @@ namespace Winotch;
 
 public sealed class CalendarRefreshService : IDisposable
 {
-    private readonly Dictionary<string, CalendarFeedCache> _cache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, CalendarFeedCache> _cache = new(StringComparer.Ordinal);
     private readonly HttpClient _http;
     private readonly bool _ownsHttpClient;
 

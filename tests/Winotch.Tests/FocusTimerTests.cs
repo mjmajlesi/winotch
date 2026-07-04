@@ -33,6 +33,18 @@ public class FocusTimerTests
     }
 
     [Fact]
+    public void PauseCatchesUpExpiredRunningPhaseBeforePausing()
+    {
+        var timer = FocusTimerState.Start(new FocusTimerSettings(TimeSpan.FromMinutes(25), TimeSpan.FromMinutes(5), false), Start);
+
+        var paused = timer.Pause(Start.AddMinutes(26));
+
+        Assert.Equal(FocusTimerStatus.Paused, paused.Status);
+        Assert.Equal(FocusTimerPhase.Break, paused.Phase);
+        Assert.Equal("04:00", paused.SnapshotAt(Start.AddHours(2)).RemainingText);
+    }
+
+    [Fact]
     public void FocusCompletionAdvancesToBreak()
     {
         var timer = FocusTimerState.Start(new FocusTimerSettings(TimeSpan.FromMinutes(25), TimeSpan.FromMinutes(5), false), Start);
@@ -91,6 +103,16 @@ public class FocusTimerTests
         Assert.Equal(FocusTimerPhase.Break, skipped.Phase);
         Assert.Null(skipped.PausedAtUtc);
         Assert.Equal("05:00", skipped.SnapshotAt(Start.AddMinutes(20)).RemainingText);
+    }
+
+    [Fact]
+    public void SkipCatchesUpExpiredRunningPhaseBeforeSkipping()
+    {
+        var timer = FocusTimerState.Start(new FocusTimerSettings(TimeSpan.FromMinutes(25), TimeSpan.FromMinutes(5), false), Start);
+
+        var skipped = timer.Skip(Start.AddMinutes(31));
+
+        Assert.Equal(FocusTimerStatus.Stopped, skipped.Status);
     }
 
     [Fact]

@@ -81,6 +81,31 @@ public class SettingsServiceTests
     }
 
     [Fact]
+    public void SettingsServiceDefaultsUnknownToastDurationWithoutDroppingOtherSettings()
+    {
+        using var temp = new TempSettingsDirectory();
+        File.WriteAllText(temp.SettingsPath, """{"general":{"use24HourClock":true},"toasts":{"durationScale":"Future"}}""");
+
+        var service = new SettingsService(temp.SettingsPath);
+
+        Assert.True(service.Current.General.Use24HourClock);
+        Assert.Equal(ToastDurationScale.Normal, service.Current.Toasts.DurationScale);
+        Assert.True(File.Exists(temp.SettingsPath));
+        Assert.False(File.Exists(SettingsService.BadPathFor(temp.SettingsPath)));
+    }
+
+    [Fact]
+    public void SettingsServiceNormalizesCalendarUrlsWithExactCasing()
+    {
+        using var temp = new TempSettingsDirectory();
+        File.WriteAllText(temp.SettingsPath, """{"calendar":{"subscriptionUrls":["HTTPS://EXAMPLE.COM/Work.ics"]}}""");
+
+        var service = new SettingsService(temp.SettingsPath);
+
+        Assert.Equal(["https://example.com/Work.ics"], service.Current.Calendar.SubscriptionUrls);
+    }
+
+    [Fact]
     public void SettingsServiceRenamesCorruptJsonAndFallsBackToDefaults()
     {
         using var temp = new TempSettingsDirectory();

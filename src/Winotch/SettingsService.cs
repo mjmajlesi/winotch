@@ -154,8 +154,39 @@ public sealed class SettingsService
             WriteIndented = true,
             PropertyNameCaseInsensitive = true
         };
-        options.Converters.Add(new JsonStringEnumConverter<ToastDurationScale>());
+        options.Converters.Add(new ToastDurationScaleJsonConverter());
         return options;
+    }
+
+    private sealed class ToastDurationScaleJsonConverter : JsonConverter<ToastDurationScale>
+    {
+        public override ToastDurationScale Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.String &&
+                reader.GetString() is { } name &&
+                Enum.TryParse<ToastDurationScale>(name, ignoreCase: true, out var named) &&
+                Enum.IsDefined(named))
+            {
+                return named;
+            }
+
+            if (reader.TokenType == JsonTokenType.Number &&
+                reader.TryGetInt32(out var value) &&
+                Enum.IsDefined((ToastDurationScale)value))
+            {
+                return (ToastDurationScale)value;
+            }
+
+            if (reader.TokenType is not JsonTokenType.Null)
+            {
+                using var _ = JsonDocument.ParseValue(ref reader);
+            }
+
+            return ToastDurationScale.Normal;
+        }
+
+        public override void Write(Utf8JsonWriter writer, ToastDurationScale value, JsonSerializerOptions options) =>
+            writer.WriteStringValue(Enum.IsDefined(value) ? value.ToString() : ToastDurationScale.Normal.ToString());
     }
 }
 
@@ -171,7 +202,7 @@ public sealed record WinotchSettings
     public WinotchSettings Normalize() => this with
     {
         General = General is null ? new GeneralSettings() : General,
-        Toasts = Toasts is null ? new ToastSettings() : Toasts,
+        Toasts = Toasts is null ? new ToastSettings() : Toasts.Normalize(),
         Calendar = Calendar is null ? new CalendarSettings() : Calendar.Normalize(),
         Features = Features is null ? new FeatureSettings() : Features
     };
@@ -190,6 +221,9 @@ public sealed record ToastSettings
     public bool NotificationToastsEnabled { get; init; } = true;
     public bool PriorityAlertsEnabled { get; init; } = true;
     public ToastDurationScale DurationScale { get; init; } = ToastDurationScale.Normal;
+
+    public ToastSettings Normalize() =>
+        Enum.IsDefined(DurationScale) ? this : this with { DurationScale = ToastDurationScale.Normal };
 }
 
 public sealed record CalendarSettings
@@ -200,7 +234,7 @@ public sealed record CalendarSettings
     public CalendarSettings Normalize()
     {
         var normalized = CalendarSubscriptionUrl.NormalizeAll(SubscriptionUrls);
-        return SubscriptionUrls.SequenceEqual(normalized, StringComparer.OrdinalIgnoreCase)
+        return SubscriptionUrls.SequenceEqual(normalized, StringComparer.Ordinal)
             ? this
             : this with { SubscriptionUrls = normalized };
     }

@@ -39,10 +39,18 @@ public sealed record FocusTimerState(
                 0)
             : Stopped;
 
-    public FocusTimerState Pause(DateTimeOffset now) =>
-        Status == FocusTimerStatus.Running
-            ? this with { Status = FocusTimerStatus.Paused, PausedAtUtc = now.ToUniversalTime() }
-            : this;
+    public FocusTimerState Pause(DateTimeOffset now)
+    {
+        if (Status != FocusTimerStatus.Running)
+        {
+            return this;
+        }
+
+        var advanced = AdvanceTo(now).State;
+        return advanced.Status == FocusTimerStatus.Running
+            ? advanced with { Status = FocusTimerStatus.Paused, PausedAtUtc = now.ToUniversalTime() }
+            : advanced;
+    }
 
     public FocusTimerState Resume(DateTimeOffset now)
     {
@@ -66,7 +74,13 @@ public sealed record FocusTimerState(
             return this;
         }
 
-        var next = NextPhase(now.ToUniversalTime());
+        var advanced = Status == FocusTimerStatus.Running ? AdvanceTo(now).State : this;
+        if (!advanced.IsActive)
+        {
+            return advanced;
+        }
+
+        var next = advanced.NextPhase(now.ToUniversalTime());
         return next.State;
     }
 

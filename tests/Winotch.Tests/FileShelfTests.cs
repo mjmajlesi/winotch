@@ -15,6 +15,16 @@ public sealed class FileShelfTests
     }
 
     [Fact]
+    public void PathsCannotBeMutatedThroughReadOnlyView()
+    {
+        var shelf = new FileShelf([Path.Combine(Path.GetTempPath(), "WinotchShelf.txt")]);
+        var paths = Assert.IsAssignableFrom<IList<string>>(shelf.Paths);
+
+        Assert.Throws<NotSupportedException>(() => paths.Add(Path.Combine(Path.GetTempPath(), "other.txt")));
+        Assert.Single(shelf.Paths);
+    }
+
+    [Fact]
     public async Task PersistenceRoundTripsStoredPaths()
     {
         var storePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}", "shelf.json");

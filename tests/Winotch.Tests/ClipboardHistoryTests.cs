@@ -160,6 +160,25 @@ public class ClipboardHistoryTests
     }
 
     [Fact]
+    public void PrivacyPolicyTreatsUnreadableCanIncludeDataAsPrivate()
+    {
+        var path = Path.GetTempFileName();
+        var stream = File.OpenRead(path);
+        stream.Dispose();
+        var formats = new FakeClipboardFormats()
+            .With(ClipboardPrivacyPolicy.CanIncludeInClipboardHistory, stream);
+
+        try
+        {
+            Assert.False(ClipboardPrivacyPolicy.CanCapture(formats));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public void UpdateQueueIgnoresSelfCopySequence()
     {
         var queue = new ClipboardUpdateQueue();
