@@ -1,6 +1,6 @@
 # Winotch
 
-Winotch is a native Windows notch overlay. It stays centered at the top of the active monitor and shows time, date, battery, Wi-Fi, volume, media, notifications, focus state, agenda, clipboard, files, controls, and system health in a compact black shell that expands on hover.
+Winotch is a native Windows notch overlay. It stays centered at the top of the active monitor and shows time, date, battery, Wi-Fi, volume, media, notifications, focus state, agenda, clipboard, controls, and system health in a compact black shell that expands on hover.
 
 ## Features
 
@@ -13,7 +13,7 @@ Winotch is a native Windows notch overlay. It stays centered at the top of the a
 - Clipboard history: in-memory text/link/image/file capture with privacy-format exclusions, thumbnail-only image storage, copy/delete/clear, and no disk persistence.
 - Settings and tray: live settings, Start with Windows, pause/resume, feature toggles, toast gates, duration scale, and JSON persistence.
 - Charging flourish: charger-connect priority toast with animated battery fill and percent readout.
-- System stats: expanded-only CPU, RAM, and network sampling with compact sparklines.
+- System stats: expanded-only CPU, RAM, and network text values.
 - Camera mirror: live default-camera flyout below the notch with mirror toggle and no recording or saved frames.
 - Calendar/agenda: ICS subscriptions, next-24-hour agenda, countdown chip, meeting reminder toast, and Join actions.
 - Multi-monitor: follows the foreground app monitor, cursor monitor for shell/desktop focus, and can be pinned back to the primary monitor from Settings.
@@ -59,7 +59,7 @@ The tray icon opens Settings, pauses/resumes the overlay, toggles Start with Win
 
 Charger-connect priority toasts add a compact green battery-fill flourish with a prominent percent readout. Charger disconnect keeps the existing quieter status toast.
 
-The expanded System column shows compact CPU, RAM, and network sparklines. Sampling starts only while the expanded panel is visible and stops again on collapse.
+The expanded System column shows compact CPU, RAM, and network text values. Sampling starts only while the expanded panel is visible and stops again on collapse.
 
 The camera button in the expanded control center opens a small live mirror flyout below the notch. The preview is mirrored by default, has a one-click normal-view toggle, and closes on X, Esc, outside click, notch collapse, pause, or power transition. Winotch never records or saves camera frames; the camera device is opened only for the live preview and released on close. The mirror uses the default Windows camera only; a camera picker is intentionally out of scope.
 
@@ -71,7 +71,7 @@ Run the full regression suite before sharing a build:
 dotnet test
 ```
 
-The tests cover Wi-Fi parsing, battery fill/color thresholds, focus timer state transitions/persistence/formatting, ICS parsing/recurrence/timezone/join-link/countdown behavior, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, clipboard history preview/privacy/dedupe behavior, priority status alert transitions, control-center naming/device/brightness/debounce state logic, system stats ring buffers/rate math/formatting/sparkline mapping, camera mirror lifecycle/layout/suppression behavior, settings persistence/startup helpers, shell mode/fullscreen heuristics, active-monitor selection, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
+The tests cover Wi-Fi parsing, battery fill/color thresholds, focus timer state transitions/persistence/formatting, ICS parsing/recurrence/timezone/join-link/countdown behavior, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, clipboard history preview/privacy/dedupe behavior, priority status alert transitions, control-center naming/device/brightness/debounce state logic, system stats sampling/rate math/formatting, camera mirror lifecycle/layout/suppression behavior, settings persistence/startup helpers, shell mode/fullscreen heuristics, active-monitor selection, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
 
 Charging flourish tests cover reusable fill-width math, animation parameter derivation, charger-alert mapping, full and low-percent edge cases, and existing low-battery queue ordering.
 
