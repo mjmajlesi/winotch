@@ -31,6 +31,8 @@ dotnet run --project src/Winotch/Winotch.csproj
 
 Hover the notch to expand it. The volume slider changes the system master volume. Media buttons control the focused Windows media session in the expanded capsule and in the brief media toast. Notification toasts show app/sender text, time, and available live Windows action buttons when the OS exposes them. Priority status toasts appear for low battery, charger connect/disconnect, Wi-Fi loss/reconnect, Bluetooth device connect, and mic/camera activity. Wi-Fi connect works for saved Windows Wi-Fi profiles.
 
+The tray icon opens Settings, pauses/resumes the overlay, toggles Start with Windows, and exits the app. Settings changes apply live and persist as indented JSON at `%LOCALAPPDATA%\Winotch\settings.json`; corrupt JSON is moved aside as `settings.bad.json` and defaults are used.
+
 ## Test
 
 Run the full regression suite before sharing a build:
@@ -39,7 +41,7 @@ Run the full regression suite before sharing a build:
 dotnet test Winotch.slnx
 ```
 
-The tests cover Wi-Fi parsing, battery fill/color thresholds, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, priority status alert transitions, shell mode/fullscreen heuristics, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
+The tests cover Wi-Fi parsing, battery fill/color thresholds, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, priority status alert transitions, settings persistence/startup helpers, shell mode/fullscreen heuristics, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
 
 ## Install
 
@@ -63,21 +65,12 @@ Run the installed app:
 & "$env:LOCALAPPDATA\Winotch\Winotch.exe"
 ```
 
-Add Winotch to startup:
-
-```powershell
-$startup = [Environment]::GetFolderPath("Startup")
-$target = "$env:LOCALAPPDATA\Winotch\Winotch.exe"
-$shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut("$startup\Winotch.lnk")
-$shortcut.TargetPath = $target
-$shortcut.WorkingDirectory = Split-Path $target
-$shortcut.Save()
-```
+Start with Windows can be toggled from Settings or the tray menu. Winotch writes the HKCU Run value `Winotch` to the quoted current executable path and repairs stale paths when it reads the setting.
 
 Uninstall:
 
 ```powershell
-Remove-Item "$([Environment]::GetFolderPath("Startup"))\Winotch.lnk" -ErrorAction SilentlyContinue
+Remove-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "Winotch" -ErrorAction SilentlyContinue
 Remove-Item "$env:LOCALAPPDATA\Winotch" -Recurse -Force
 ```
 

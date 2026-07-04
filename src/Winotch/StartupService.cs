@@ -1,4 +1,5 @@
 using System.IO;
+using System.Reflection;
 using Microsoft.Win32;
 
 namespace Winotch;
@@ -61,6 +62,11 @@ public sealed class StartupService(IRunKeyStore runKeyStore)
 
     public static bool IsCurrentPathValue(string? value, string executablePath) =>
         string.Equals(ExtractExecutablePath(value), executablePath.Trim(), StringComparison.OrdinalIgnoreCase);
+
+    public static string CurrentExecutablePath() =>
+        Environment.ProcessPath ??
+        Assembly.GetEntryAssembly()?.Location ??
+        AppContext.BaseDirectory;
 
     public static string? ExtractExecutablePath(string? value)
     {

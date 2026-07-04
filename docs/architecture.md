@@ -13,6 +13,11 @@ flowchart TD
     Status --> Wifi["netsh wlan"]
     Status --> Notifications["UserNotificationListener"]
     Status --> Priority["Priority Status Alerts"]
+    App --> Settings["SettingsService JSON Store"]
+    App --> Tray["NotifyIcon Tray Surface"]
+    Tray --> SettingsWindow["Settings Window"]
+    SettingsWindow --> Settings
+    Settings --> Window
     Battery --> Window
     Audio --> Window
     Media --> Window
@@ -45,6 +50,7 @@ flowchart LR
 - `NotchMutedText`: secondary text
 - Typography: Segoe UI Variable Text, falling back to Segoe UI
 - Icons: Segoe MDL2 Assets
+- Settings reuses these tokens with a dark toggle switch style and section header style so later feature groups can add controls without inventing new chrome.
 
 ## Motion
 
@@ -78,6 +84,14 @@ Winotch reads notification history through `UserNotificationListener` when Windo
 
 Priority status alerts reuse the compact notification toast surface for system events that should be glanceable without opening the full capsule: low battery, charger connect/disconnect, Wi-Fi loss/reconnect, Bluetooth device connect, and mic/camera activation. Battery and Wi-Fi reuse the existing status reads. Bluetooth uses the native Windows Bluetooth device enumeration API, while mic/camera activity comes from Windows privacy usage registry state. The tracker suppresses routine first-run connection state and repeated low-battery spam, but queues simultaneous critical alerts such as camera, microphone, and low battery.
 
+## Settings, Tray, and Startup
+
+Settings live in a typed model persisted by `SettingsService` at `%LOCALAPPDATA%\Winotch\settings.json`. Missing files load defaults, corrupt JSON is renamed to `settings.bad.json`, saves use a temp file plus replace, and `Changed` notifies live UI.
+
+The tray surface is a WinForms `NotifyIcon` with Open Settings, Pause/Resume notch, Start with Windows, and Exit. Pause hides the overlay and releases any app-bar reservation; resume reapplies the detected shell mode. Exit is explicit from the tray so closing the settings window does not terminate the app.
+
+Start with Windows is backed by `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` value `Winotch`. The app reads the actual registry state for the settings/tray checkbox, writes the quoted current executable path, and rewrites stale paths when access succeeds.
+
 ## Test Strategy
 
 The automated suite focuses on deterministic logic that would otherwise surface as visual bugs:
@@ -87,6 +101,7 @@ The automated suite focuses on deterministic logic that would otherwise surface 
 - Media snapshot display fallbacks, artwork fallback, compact toast geometry/timing, and track-change de-duplication.
 - Notification signature generation, first-run suppression, empty snapshot behavior, repeated-message handling, shell suppression mapping, compact toast metadata, and live action invocation.
 - Priority status transition handling for low battery, charger changes, Wi-Fi loss/reconnect, Bluetooth connects, mic/camera activation, queued alerts, and privacy active-use detection.
+- Settings JSON defaults, roundtrip, corrupt-file fallback, locked-file fallback, change events, concurrent saves, toast-duration scaling, and startup run-key formatting/stale-path repair.
 - Foreground mode heuristics for desktop, own window, maximized apps, screen-filling apps, and near-threshold windows.
 - Fallback app-window filtering so hidden, minimized, shell, own, and tiny windows cannot force full-bar mode.
 - App-bar DIP-to-physical-pixel conversion across DPI scales.
