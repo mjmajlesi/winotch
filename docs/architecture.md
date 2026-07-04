@@ -29,6 +29,7 @@ flowchart LR
     Shell --> Compact["Compact State"]
     Shell --> Expanded["Expanded State"]
     Expanded --> Media["Now Playing Controls"]
+    Shell --> MediaToast["Compact Media Toast"]
     Expanded --> Notifications["Notifications"]
     Expanded --> Controls["Volume and Wi-Fi Controls"]
 ```
@@ -63,7 +64,7 @@ Foreground detection uses Win32 window bounds/window placement and falls back to
 
 ## Media
 
-Winotch reads the focused Windows system media transport session through `GlobalSystemMediaTransportControlsSessionManager`. When a playable session appears or resumes, the same expanded capsule used for notifications pops open and shows artwork, title, artist, and previous/play-pause/next controls. The media row is hidden when Windows reports no active media session.
+Winotch reads the focused Windows system media transport session through `GlobalSystemMediaTransportControlsSessionManager`. The expanded capsule keeps artwork, title, artist, and previous/play-pause/next controls. New playing tracks also show a brief compact toast with the same controls, then return to the normal mini/full-bar shell so fullscreen apps are not covered by the full expanded capsule.
 
 ## Test Strategy
 
@@ -71,7 +72,7 @@ The automated suite focuses on deterministic logic that would otherwise surface 
 
 - Wi-Fi netsh/profile parsing, de-duplication, blank values, and visible list limits.
 - Battery icon fill width, clamp behavior, charging color, and low-power thresholds.
-- Media snapshot display fallbacks, artwork fallback, and pop-up de-duplication for play/resume/track-change states.
+- Media snapshot display fallbacks, artwork fallback, compact toast geometry/timing, and track-change de-duplication.
 - Notification signature generation, first-run suppression, empty snapshot behavior, and repeat suppression.
 - Foreground mode heuristics for desktop, own window, maximized apps, screen-filling apps, and near-threshold windows.
 - Fallback app-window filtering so hidden, minimized, shell, own, and tiny windows cannot force full-bar mode.

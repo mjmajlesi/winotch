@@ -185,6 +185,44 @@
                         <Button x:Name="ConnectWifiButton" Content="Connect" HorizontalAlignment="Left" Margin="0,8,0,0" Click="ConnectWifi_Click" />
                     </StackPanel>
                 </Grid>
+
+                <Grid x:Name="MediaToastPanel" Grid.RowSpan="2" Visibility="Collapsed" Opacity="0" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Width="42" Height="42" CornerRadius="8" Background="{StaticResource NotchPanel}" ClipToBounds="True" VerticalAlignment="Center">
+                        <Grid>
+                            <Image x:Name="MediaToastArtworkImage" Stretch="UniformToFill" Visibility="Collapsed" />
+                            <TextBlock x:Name="MediaToastArtworkFallback"
+                                       Text="Audio"
+                                       FontSize="9"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource NotchMutedText}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="MediaToastTitleText" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="MediaToastArtistText" FontSize="11" Foreground="{StaticResource NotchMutedText}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="MediaToastPreviousButton" Style="{StaticResource MediaIconButton}" ToolTip="Previous" AutomationProperties.Name="Toast previous track" Click="MediaPrevious_Click">
+                            <TextBlock Style="{StaticResource IconText}" Text="&#xE100;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="MediaToastPlayPauseButton" Style="{StaticResource MediaIconButton}" ToolTip="Play or pause" AutomationProperties.Name="Toast play or pause media" Click="MediaPlayPause_Click">
+                            <TextBlock x:Name="MediaToastPlayPauseIcon" Style="{StaticResource IconText}" Text="&#xE768;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="MediaToastNextButton" Style="{StaticResource MediaIconButton}" ToolTip="Next" AutomationProperties.Name="Toast next track" Click="MediaNext_Click">
+                            <TextBlock Style="{StaticResource IconText}" Text="&#xE101;" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
             </Grid>
         </Border>
     </Grid>

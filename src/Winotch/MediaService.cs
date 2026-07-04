@@ -68,15 +68,22 @@ public sealed record MediaSnapshot(
 
 public sealed class MediaChangeTracker
 {
-    private string? _lastSignature;
-    private bool _wasPlaying;
+    private string? _lastPoppedSignature;
 
     public bool ShouldPop(MediaSnapshot snapshot)
     {
-        var shouldPop = snapshot.HasMedia && snapshot.IsPlaying && (snapshot.Signature != _lastSignature || !_wasPlaying);
-        _lastSignature = snapshot.HasMedia ? snapshot.Signature : null;
-        _wasPlaying = snapshot.IsPlaying;
-        return shouldPop;
+        if (!snapshot.HasMedia || !snapshot.IsPlaying)
+        {
+            return false;
+        }
+
+        if (StringComparer.Ordinal.Equals(_lastPoppedSignature, snapshot.Signature))
+        {
+            return false;
+        }
+
+        _lastPoppedSignature = snapshot.Signature;
+        return true;
     }
 }
 

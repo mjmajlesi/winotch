@@ -358,7 +358,7 @@ public class StatusParsingTests
     }
 
     [Fact]
-    public void MediaChangeTrackerPopsForTrackChangeAndResume()
+    public void MediaChangeTrackerPopsForTrackChangeButNotResume()
     {
         var tracker = new MediaChangeTracker();
         var first = Media("Song", "Artist", MediaState.Playing);
@@ -367,7 +367,7 @@ public class StatusParsingTests
 
         Assert.True(tracker.ShouldPop(first));
         Assert.False(tracker.ShouldPop(paused));
-        Assert.True(tracker.ShouldPop(first));
+        Assert.False(tracker.ShouldPop(first));
         Assert.True(tracker.ShouldPop(next));
     }
 
@@ -459,6 +459,7 @@ public class StatusParsingTests
         Assert.Equal(540, ShellMetrics.CenterLeft(1920, ShellMetrics.ExpandedWidth));
         Assert.Equal(new ShellGeometry(1920, 32, 34, 0), ShellMetrics.ForMode(isFullBar: true, screenWidth: 1920));
         Assert.Equal(new ShellGeometry(220, 40, 46, 850), ShellMetrics.ForMode(isFullBar: false, screenWidth: 1920));
+        Assert.Equal(new ShellGeometry(520, 68, 76, 700), ShellMetrics.MediaToast(1920));
     }
 
     [Fact]
@@ -474,6 +475,17 @@ public class StatusParsingTests
         Assert.Equal(0, fullBar.Left);
         Assert.Equal(539.5, expanded.Left);
         Assert.True(expanded.WindowHeight > expanded.ShellHeight);
+    }
+
+    [Fact]
+    public void MediaToastIsCompactAndCentered()
+    {
+        var toast = ShellMetrics.MediaToast(1919);
+
+        Assert.Equal(ShellMetrics.MediaToastWidth, toast.Width);
+        Assert.Equal(699.5, toast.Left);
+        Assert.True(toast.Width < ShellMetrics.ExpandedWidth);
+        Assert.True(toast.WindowHeight < ShellMetrics.ExpandedWindowHeight);
     }
 
     [Fact]
@@ -494,6 +506,12 @@ public class StatusParsingTests
     public void DetailRevealStartsDuringShellMotion()
     {
         Assert.InRange(ShellAnimationTiming.DetailRevealDelayMilliseconds, 1, ShellAnimationTiming.MotionMilliseconds - 1);
+    }
+
+    [Fact]
+    public void MediaToastDurationStaysBrief()
+    {
+        Assert.InRange(ShellAnimationTiming.MediaToastMilliseconds, 3000, 5000);
     }
 
     private static MediaSnapshot Media(string title, string artist, MediaState state) =>

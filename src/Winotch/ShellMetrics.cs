@@ -9,6 +9,9 @@ public static class ShellMetrics
     public const double MiniWindowHeight = 46;
     public const double FullBarShellHeight = 32;
     public const double FullBarWindowHeight = 34;
+    public const double MediaToastWidth = 520;
+    public const double MediaToastShellHeight = 68;
+    public const double MediaToastWindowHeight = 76;
     public const double ExpandedWidth = 840;
     public const double ExpandedShellHeight = 246;
     public const double ExpandedWindowHeight = 300;
@@ -30,4 +33,10 @@ public static class ShellMetrics
         ExpandedShellHeight,
         ExpandedWindowHeight,
         CenterLeft(screenWidth, ExpandedWidth));
+
+    public static ShellGeometry MediaToast(double screenWidth) => new(
+        MediaToastWidth,
+        MediaToastShellHeight,
+        MediaToastWindowHeight,
+        CenterLeft(screenWidth, MediaToastWidth));
 }
