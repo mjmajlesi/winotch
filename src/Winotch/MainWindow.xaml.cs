@@ -52,6 +52,7 @@ public partial class MainWindow : Window
     private bool _notchPaused;
     private bool _exitRequested;
     private bool _updatingControlCenter;
+    private ShellMode _currentShellMode = ShellMode.Mini;
     private int _animationFrameRate = 60;
     private MonitorSnapshot? _currentMonitor;
     private DateTime _ignoreHoverUntilUtc;
@@ -68,7 +69,6 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        InitializeFileShelf();
         _brightnessWriter = new DebouncedBrightnessWriter(TimeSpan.FromMilliseconds(150), _brightness.SetBrightnessAsync);
         _trayIcon = new TrayIconService(this, _settings, _startup);
         _settings.Changed += Settings_Changed;
@@ -109,7 +109,6 @@ public partial class MainWindow : Window
         _shellTimer.Start();
         RefreshClipboardPanel();
         await ApplyAccountPictureAsync();
-        await LoadFileShelfAsync();
         await RefreshCalendarAsync();
         await RefreshStatusAsync();
     }
@@ -284,7 +283,6 @@ public partial class MainWindow : Window
 
     private void ApplyFeatureSettings(WinotchSettings settings)
     {
-        ApplyFileShelfEnabled(settings.Features.FileShelfEnabled);
         ApplyClipboardHistoryEnabled(settings.Features.ClipboardHistoryEnabled);
         ApplyAppMixerEnabled(settings.Features.ShowAppMixer);
         ApplySystemStatsEnabled(settings.Features.SystemStatsEnabled);
@@ -547,7 +545,6 @@ public partial class MainWindow : Window
         }
 
         _expanded = expanded;
-        UpdateShelfMiniIndicator();
         _expandedReveal?.Cancel();
         _expandedReveal?.Dispose();
         _expandedReveal = null;
@@ -905,7 +902,6 @@ public partial class MainWindow : Window
             ShellAnimator.Animate(DetailPanel, OpacityProperty, 0, _animationFrameRate);
             ShellAnimator.AnimateShell(this, NotchShell, geometry, _animationFrameRate);
             SetMouseTransparent(isFullBar);
-            UpdateShelfMiniIndicator();
             return;
         }
 
@@ -918,7 +914,6 @@ public partial class MainWindow : Window
         NotchShell.Width = geometry.Width;
         NotchShell.Height = geometry.ShellHeight;
         SetMouseTransparent(isFullBar);
-        UpdateShelfMiniIndicator();
     }
 
     private void ApplyHeaderDensity(bool isFullBar)
@@ -1273,7 +1268,6 @@ public partial class MainWindow : Window
         _compactToastHide?.Dispose();
         _statsTimer.Stop();
         _systemStats.Dispose();
-        DisposeFileShelf();
         _trayIcon.Dispose();
         _settings.Changed -= Settings_Changed;
         _brightnessWriter.Dispose();
