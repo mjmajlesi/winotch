@@ -43,6 +43,23 @@ public class CalendarRefreshServiceTests
     }
 
     [Fact]
+    public async Task RefreshKeepsCaseDistinctPathCachesSeparate()
+    {
+        var now = new DateTimeOffset(2026, 7, 4, 10, 0, 0, TimeSpan.Zero);
+        var handler = new QueueHandler(
+            _ => Response(HttpStatusCode.OK, Ics("upper"), "\"upper\"", null),
+            _ => Response(HttpStatusCode.OK, Ics("lower"), "\"lower\"", null));
+        using var service = new CalendarRefreshService(new HttpClient(handler));
+
+        var result = await service.RefreshAsync(
+            ["https://example.com/Work.ics", "https://example.com/work.ics"],
+            now);
+
+        Assert.Equal(["upper", "lower"], result.Events.Select(calendarEvent => calendarEvent.Uid).ToArray());
+        Assert.All(handler.Requests, request => Assert.Equal(string.Empty, request.IfNoneMatch));
+    }
+
+    [Fact]
     public async Task RefreshPropagatesCallerCancellation()
     {
         var now = new DateTimeOffset(2026, 7, 4, 10, 0, 0, TimeSpan.Zero);

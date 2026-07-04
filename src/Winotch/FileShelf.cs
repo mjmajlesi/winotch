@@ -16,7 +16,7 @@ public sealed class FileShelf
         Add(paths);
     }
 
-    public IReadOnlyList<string> Paths => _paths;
+    public IReadOnlyList<string> Paths => _paths.AsReadOnly();
     public int Count => _paths.Count;
 
     public bool Add(IEnumerable<string> paths)

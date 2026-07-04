@@ -43,8 +43,15 @@ public static class ClipboardPrivacyPolicy
 
     private static byte[] ReadFirstBytes(Stream stream, int count)
     {
-        var buffer = new byte[count];
-        var read = stream.Read(buffer, 0, count);
-        return read == count ? buffer : [];
+        try
+        {
+            var buffer = new byte[count];
+            var read = stream.Read(buffer, 0, count);
+            return read == count ? buffer : [];
+        }
+        catch (Exception ex) when (ex is IOException or NotSupportedException or ObjectDisposedException)
+        {
+            return [];
+        }
     }
 }

@@ -95,6 +95,14 @@ public class CalendarAgendaTests
             CalendarSubscriptionUrl.NormalizeAll(["", "not a url", "https://example.com/a.ics", "webcal://example.com/a.ics"]));
     }
 
+    [Fact]
+    public void SubscriptionUrlsKeepCaseDistinctPaths()
+    {
+        Assert.Equal(
+            ["https://example.com/Work.ics", "https://example.com/work.ics"],
+            CalendarSubscriptionUrl.NormalizeAll(["HTTPS://EXAMPLE.COM/Work.ics", "https://example.com/work.ics"]));
+    }
+
     private static CalendarOccurrence Occurrence(
         string uid,
         string title,

@@ -10,7 +10,7 @@ public static class CalendarSubscriptionUrl
         }
 
         var normalized = new List<string>();
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var url in urls)
         {
             if (TryNormalize(url, out var value) && seen.Add(value))
