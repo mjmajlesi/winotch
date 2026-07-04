@@ -150,10 +150,11 @@
                 </Grid>
 
                 <Grid x:Name="DetailPanel" Grid.Row="1" Opacity="0" Margin="0,10,0,0" ClipToBounds="True">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                    <ScrollViewer x:Name="DetailScrollViewer"
+                                  VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled"
                                   PanningMode="VerticalOnly">
-                        <Grid>
+                        <Grid Width="{Binding ViewportWidth, ElementName=DetailScrollViewer}" ClipToBounds="True">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="380" />
                                 <RowDefinition Height="Auto" />
