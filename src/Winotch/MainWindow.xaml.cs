@@ -718,8 +718,7 @@ public partial class MainWindow : Window
 
     private double PrimaryScreenWidthDip()
     {
-        var dpiScale = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice.M11 ?? 1;
-        return ShellMetrics.ToDeviceIndependentWidth(SystemParameters.PrimaryScreenWidth, dpiScale);
+        return SystemParameters.PrimaryScreenWidth;
     }
 
     private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
