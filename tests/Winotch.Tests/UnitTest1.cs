@@ -146,4 +146,15 @@ public class StatusParsingTests
         Assert.Equal(new ShellGeometry(1920, 32, 34, 0), ShellMetrics.ForMode(isFullBar: true, screenWidth: 1920));
         Assert.Equal(new ShellGeometry(220, 36, 42, 850), ShellMetrics.ForMode(isFullBar: false, screenWidth: 1920));
     }
+
+    [Fact]
+    public void ShellEaseOutIsClampedAndMonotonic()
+    {
+        Assert.Equal(0, ShellAnimator.EaseOut(-1));
+        Assert.Equal(0, ShellAnimator.EaseOut(0));
+        Assert.True(ShellAnimator.EaseOut(0.25) < ShellAnimator.EaseOut(0.5));
+        Assert.True(ShellAnimator.EaseOut(0.5) < ShellAnimator.EaseOut(0.75));
+        Assert.Equal(1, ShellAnimator.EaseOut(1));
+        Assert.Equal(1, ShellAnimator.EaseOut(2));
+    }
 }

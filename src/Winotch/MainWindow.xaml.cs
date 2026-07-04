@@ -140,7 +140,7 @@ public partial class MainWindow : Window
         NotchShell.CornerRadius = new CornerRadius(0, 0, 34, 34);
         ShellAnimator.Clear(this, NotchShell, DetailPanel);
         DetailPanel.Opacity = 0;
-        ShellAnimator.AnimateShell(this, NotchShell, ShellMetrics.Expanded(SystemParameters.PrimaryScreenWidth), _animationFrameRate);
+        ShellAnimator.AnimateShell(this, NotchShell, ShellMetrics.Expanded(SystemParameters.PrimaryScreenWidth));
         _expandedReveal = new CancellationTokenSource();
         _ = RevealExpandedContentAsync(_expandedReveal.Token);
     }
@@ -206,7 +206,7 @@ public partial class MainWindow : Window
         if (animate)
         {
             ShellAnimator.Animate(DetailPanel, OpacityProperty, 0, _animationFrameRate);
-            ShellAnimator.AnimateShell(this, NotchShell, geometry, _animationFrameRate);
+            ShellAnimator.AnimateShell(this, NotchShell, geometry);
             SetMouseTransparent(isFullBar);
             return;
         }
