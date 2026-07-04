@@ -23,6 +23,8 @@ Winotch is a native Windows desktop notch: a centered, top-attached black overla
 ## Git
 - Do not commit build outputs, user settings, logs, packages, or local IDE files.
 - Do not commit screenshots, videos, or locally published EXE folders.
+- Do not commit QA screenshots, screen recordings, captured clipboard images, or temporary Codex/agent artifacts.
+- Before GitHub publication, scan tracked files and history for local artifacts; rewrite history only when artifacts are actually reachable.
 - Commit coherent milestones: project setup, core shell/UI, OS integrations, docs/verification.
 - Keep GitHub docs source-only while alpha: no release workflows, tags, or published binaries unless explicitly requested.
 

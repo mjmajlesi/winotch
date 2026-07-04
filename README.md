@@ -10,7 +10,7 @@ License: The Unlicense. Use, modify, copy, publish, or sell it with no restricti
 
 ## Features
 
-- Notch shell: mini pill, fullscreen-aware full bar, expanded panel, compact toasts, polished WPF motion, and DPI-correct monitor centering.
+- Notch shell: centered mini pill, hover-expanded panel, compact toasts, polished WPF motion, and DPI-correct monitor centering.
 - Media: current Windows media session metadata, artwork, playback controls, and media-change toasts.
 - Notifications: Windows notification list, compact notification toasts, live action buttons when Windows exposes them, and OS quiet-state suppression.
 - Priority alerts: low battery, charger changes, Wi-Fi loss/reconnect, Bluetooth connects, microphone/camera activity, and focus completion toasts.
@@ -97,7 +97,7 @@ Run the full regression suite before sharing a build:
 dotnet test
 ```
 
-The tests cover Wi-Fi parsing, battery fill/color thresholds, focus timer state transitions/persistence/formatting, ICS parsing/recurrence/timezone/join-link/countdown behavior, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, clipboard history preview/privacy/dedupe behavior, priority status alert transitions, control-center naming/device/brightness/debounce state logic, system stats sampling/rate math/formatting, camera mirror lifecycle/layout/suppression behavior, settings persistence/startup helpers, shell mode/fullscreen heuristics, active-monitor selection, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
+The tests cover Wi-Fi parsing, battery fill/color thresholds, focus timer state transitions/persistence/formatting, ICS parsing/recurrence/timezone/join-link/countdown behavior, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, clipboard history preview/privacy/dedupe behavior, priority status alert transitions, control-center naming/device/brightness/debounce state logic, system stats sampling/rate math/formatting, camera mirror lifecycle/layout/suppression behavior, settings persistence/startup helpers, shell mode sizing heuristics, active-monitor selection, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
 
 Charging flourish tests cover reusable fill-width math, animation parameter derivation, charger-alert mapping, full and low-percent edge cases, and existing low-battery queue ordering.
 

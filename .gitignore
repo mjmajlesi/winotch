@@ -3,13 +3,22 @@ bin/
 obj/
 out/
 publish/
+artifacts/
+packages/
+*.nupkg
+*.snupkg
+*.msi
+*.msix
+*.appx
 
 # .NET and IDE state
 .vs/
 .vscode/
+.idea/
 *.user
 *.suo
 *.rsuser
+*.DotSettings.user
 
 # Logs and local artifacts
 *.log
@@ -22,12 +31,25 @@ coverage/
 coverage*.xml
 screenshots/
 qa-screenshots/
+captures/
+recordings/
+ScreenSketch/
 winotch-qa.png
 winotch-*-qa.png
 *.mp4
 *.mov
 *.avi
 *.webm
+*.mkv
+
+# Local settings and agent scratch
+.env
+.env.*
+*.local
+.codex/
+.agents/
+codex-*/
+agent-*/
 
 # OS files
 Thumbs.db
