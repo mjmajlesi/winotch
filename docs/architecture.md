@@ -125,7 +125,7 @@ CPU uses `Processor Information\% Processor Utility\_Total` with `Processor\% Pr
 
 ## Camera Mirror
 
-The camera mirror button opens a separate topmost rounded flyout positioned under the notch. `CameraMirrorService` owns the `MediaCapture` and `MediaFrameReader` lifecycle, emits CPU-backed BGRA frames for WPF, and closes the device on X, Esc, outside click, notch collapse, pause, or suspend/resume. The UI computes aspect-fit placement to letterbox the preview without stretching and mirrors horizontally by default. Camera selection stays on the default Windows camera; a picker is not part of the current scope.
+The camera mirror button opens a separate topmost rounded flyout positioned under the notch. `CameraMirrorService` owns the `MediaCapture` and `MediaFrameReader` lifecycle, emits CPU-backed BGRA frames for WPF, and closes the device on X, Esc, outside click, notch collapse, pause, or suspend/resume. The UI computes cover placement so the preview fills the rounded viewport without stretching, cropping overflow at the edges, and mirrors horizontally by default. Camera selection stays on the default Windows camera; a picker is not part of the current scope.
 
 ## Notifications
 
@@ -189,7 +189,7 @@ The automated suite focuses on deterministic logic that would otherwise surface 
 - File shelf path de-duplication, JSON roundtrip and corrupt-file fallback, missing-file classification, deterministic display-name truncation, and visible-tile overflow.
 - Control-center app naming fallbacks, output device ordering/default marking, microphone pill state mapping, brightness normalization/clamping, and debounced brightness writes.
 - System stats fixed windows, network delta/reset handling, byte/RAM formatting, and sparkline point mapping.
-- Camera mirror lifecycle transitions, aspect-fit letterboxing math, and self camera-alert suppression.
+- Camera mirror lifecycle transitions, cover/crop layout math, and self camera-alert suppression.
 - Foreground mode heuristics for desktop, own window, maximized apps, screen-filling apps, and near-threshold windows.
 - Fallback app-window filtering so hidden, minimized, shell, own, and tiny windows cannot force full-bar mode.
 - App-bar DIP-to-physical-pixel conversion across DPI scales.
