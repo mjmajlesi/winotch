@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
 
@@ -18,6 +19,7 @@ public partial class MainWindow : Window
     private readonly NotificationChangeTracker _notificationChanges = new();
     private readonly MediaService _media = new();
     private readonly MediaChangeTracker _mediaChanges = new();
+    private readonly AccountPictureService _accountPicture = new();
     private readonly AppBarReservationService _appBar = new();
     private bool _expanded;
     private bool _updatingVolume;
@@ -45,7 +47,21 @@ public partial class MainWindow : Window
         _clockTimer.Start();
         _statusTimer.Start();
         _shellTimer.Start();
+        await ApplyAccountPictureAsync();
         await RefreshStatusAsync();
+    }
+
+    private async Task ApplyAccountPictureAsync()
+    {
+        var image = MediaArtwork.FromBytes(await _accountPicture.ReadAsync());
+        if (image is null)
+        {
+            return;
+        }
+
+        LogoAccountPicture.Fill = new ImageBrush(image) { Stretch = Stretch.UniformToFill };
+        LogoAccountPicture.Visibility = Visibility.Visible;
+        LogoFallbackText.Visibility = Visibility.Collapsed;
     }
 
     private void UpdateClock()

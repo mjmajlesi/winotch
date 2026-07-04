@@ -45,7 +45,10 @@
 
                     <StackPanel x:Name="ClockGroup" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
                         <Border x:Name="LogoBadge" Width="28" Height="28" CornerRadius="14" Background="{StaticResource NotchPanel}" Margin="0,0,10,0">
-                            <TextBlock Text="W" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Grid>
+                                <Ellipse x:Name="LogoAccountPicture" Visibility="Collapsed" />
+                                <TextBlock x:Name="LogoFallbackText" Text="W" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Grid>
                         </Border>
                         <StackPanel>
                             <TextBlock x:Name="TimeText" FontSize="17" FontWeight="SemiBold" LineHeight="22" />

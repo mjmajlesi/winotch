@@ -1,4 +1,5 @@
 using System.Windows.Media;
+using Windows.Storage;
 
 namespace Winotch.Tests;
 
@@ -385,6 +386,44 @@ public class StatusParsingTests
     {
         Assert.Null(MediaArtwork.FromBytes(null));
         Assert.Null(MediaArtwork.FromBytes([]));
+    }
+
+    [Fact]
+    public async Task AccountPictureServiceReadsNonEmptyPictureFile()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
+        await File.WriteAllBytesAsync(path, [1, 2, 3]);
+
+        try
+        {
+            var file = await StorageFile.GetFileFromPathAsync(path);
+            var bytes = await AccountPictureService.ReadFileAsync(file);
+
+            Assert.Equal([1, 2, 3], bytes);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task AccountPictureServiceIgnoresEmptyPictureFile()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
+        await File.WriteAllBytesAsync(path, []);
+
+        try
+        {
+            var file = await StorageFile.GetFileFromPathAsync(path);
+            var bytes = await AccountPictureService.ReadFileAsync(file);
+
+            Assert.Null(bytes);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Theory]
