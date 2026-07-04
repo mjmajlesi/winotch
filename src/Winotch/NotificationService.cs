@@ -130,6 +130,11 @@ public sealed class NotificationService : IDisposable
     {
         try
         {
+            if (element.Current.ProcessId == Environment.ProcessId)
+            {
+                return null;
+            }
+
             var bounds = element.Current.BoundingRectangle;
             if (bounds.IsEmpty || bounds.Width < 180 || bounds.Width > 760 || bounds.Height < 60 || bounds.Height > 520)
             {

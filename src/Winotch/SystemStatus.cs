@@ -8,7 +8,7 @@ public static class SystemStatus
     {
         var power = SystemInformation.PowerStatus;
         var percent = Math.Clamp((int)Math.Round(power.BatteryLifePercent * 100), 0, 100);
-        var charging = power.PowerLineStatus == PowerLineStatus.Online;
+        var charging = power.BatteryChargeStatus.HasFlag(BatteryChargeStatus.Charging);
         return new BatteryInfo(percent, charging);
     }
 }

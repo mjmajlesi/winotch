@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Winotch"
         Width="680"
-        Height="300"
+        Height="40"
         WindowStyle="None"
         ResizeMode="NoResize"
         AllowsTransparency="True"
@@ -19,13 +19,13 @@
         MouseLeave="Window_MouseLeave">
     <Grid Background="Transparent">
         <Border x:Name="NotchShell"
-                Width="680"
-                Height="68"
+                Width="220"
+                Height="36"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Stretch"
                 Background="{StaticResource NotchBlack}"
-                CornerRadius="0,0,34,34"
-                Padding="18,8,18,12"
+                CornerRadius="0,0,18,18"
+                Padding="10,4,10,6"
                 SnapsToDevicePixels="True">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.16" Color="#000000" />
@@ -33,7 +33,7 @@
 
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="48" />
+                    <RowDefinition x:Name="HeaderRow" Height="28" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -43,8 +43,8 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource NotchPanel}" Margin="0,0,10,0">
+                    <StackPanel x:Name="ClockGroup" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Border x:Name="LogoBadge" Width="28" Height="28" CornerRadius="14" Background="{StaticResource NotchPanel}" Margin="0,0,10,0">
                             <TextBlock Text="W" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <StackPanel>
@@ -53,7 +53,7 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel x:Name="StatusGroup" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
                         <Border CornerRadius="17" Background="{StaticResource NotchPanel}" Padding="11,7" Margin="0,0,8,0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Style="{StaticResource IconText}" Text="&#xE701;" Margin="0,0,6,0" />
@@ -129,8 +129,33 @@
                                  Height="42"
                                  BorderThickness="0"
                                  Background="Transparent"
-                                 Foreground="{StaticResource NotchText}" />
-                        <Button Content="Connect" HorizontalAlignment="Left" Margin="0,8,0,0" Click="ConnectWifi_Click" />
+                                 Foreground="{StaticResource NotchText}">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="8,4" />
+                                    <Setter Property="Foreground" Value="{StaticResource NotchText}" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="ItemChrome" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter />
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ItemChrome" Property="Background" Value="{StaticResource NotchPanel}" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="ItemChrome" Property="Background" Value="{StaticResource NotchPanel}" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                        <Button x:Name="ConnectWifiButton" Content="Connect" HorizontalAlignment="Left" Margin="0,8,0,0" Click="ConnectWifi_Click" />
                     </StackPanel>
                 </Grid>
             </Grid>

@@ -55,15 +55,59 @@ public class StatusParsingTests
     }
 
     [Theory]
-    [InlineData(96, 15.36, 50, 215, 75)]
-    [InlineData(49, 7.84, 255, 204, 0)]
-    [InlineData(19, 3.04, 255, 69, 58)]
-    public void BatteryVisualUsesFillAndThresholdColors(int percent, double expectedWidth, byte red, byte green, byte blue)
+    [InlineData(96, false, 15.36, 246, 246, 244)]
+    [InlineData(96, true, 15.36, 50, 215, 75)]
+    [InlineData(49, false, 7.84, 255, 204, 0)]
+    [InlineData(19, false, 3.04, 255, 69, 58)]
+    public void BatteryVisualUsesFillAndThresholdColors(int percent, bool isCharging, double expectedWidth, byte red, byte green, byte blue)
     {
-        var visual = BatteryVisual.FromPercent(percent);
+        var visual = BatteryVisual.FromPercent(percent, isCharging);
         var brush = Assert.IsType<SolidColorBrush>(visual.Brush);
 
         Assert.Equal(expectedWidth, visual.FillWidth, precision: 2);
         Assert.Equal(Color.FromRgb(red, green, blue), brush.Color);
+    }
+
+    [Fact]
+    public void ForegroundModeUsesMiniForDesktopAndOwnWindow()
+    {
+        var monitor = new NativeRect(0, 0, 1920, 1080);
+        var fullscreen = new NativeRect(0, 0, 1920, 1040);
+
+        Assert.Equal(ShellMode.Mini, ForegroundWindowService.DecideMode(isOwnWindow: true, isShell: false, isMaximized: true, fullscreen, monitor));
+        Assert.Equal(ShellMode.Mini, ForegroundWindowService.DecideMode(isOwnWindow: false, isShell: true, isMaximized: true, fullscreen, monitor));
+    }
+
+    [Fact]
+    public void ForegroundModeUsesFullBarForMaximizedOrScreenFillingApp()
+    {
+        var monitor = new NativeRect(0, 0, 1920, 1080);
+        var normal = new NativeRect(300, 160, 1200, 760);
+        var filling = new NativeRect(0, 0, 1920, 1040);
+
+        Assert.Equal(ShellMode.Mini, ForegroundWindowService.DecideMode(isOwnWindow: false, isShell: false, isMaximized: false, normal, monitor));
+        Assert.Equal(ShellMode.FullBar, ForegroundWindowService.DecideMode(isOwnWindow: false, isShell: false, isMaximized: true, normal, monitor));
+        Assert.Equal(ShellMode.FullBar, ForegroundWindowService.DecideMode(isOwnWindow: false, isShell: false, isMaximized: false, filling, monitor));
+    }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData(0, true)]
+    [InlineData(1, false)]
+    public void NotificationSilenceUsesGlobalToastToggle(int? enabled, bool expected)
+    {
+        Assert.Equal(expected, NotificationSilenceService.IsGloballySilenced(enabled));
+    }
+
+    [Theory]
+    [InlineData(0, 60)]
+    [InlineData(24, 60)]
+    [InlineData(60, 60)]
+    [InlineData(120, 120)]
+    [InlineData(144, 144)]
+    [InlineData(501, 60)]
+    public void RefreshRateFallsBackOnlyForInvalidValues(int refreshRate, int expected)
+    {
+        Assert.Equal(expected, DisplayRefreshRateService.NormalizeRefreshRate(refreshRate));
     }
 }

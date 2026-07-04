@@ -42,3 +42,11 @@ flowchart LR
 ## Motion
 
 The resting notch is a compact top-attached pill. Hover and notification activity expand width, height, and detail opacity with a short ease-out animation, matching the supplied reference direction without adding a custom animation engine.
+
+## Shell States
+
+- `Mini`: tiny centered pill for desktop/idle context.
+- `FullBar`: full-width top bar when the foreground app is maximized or fills the screen.
+- `Expanded`: larger centered island on hover or unsilenced notification activity.
+
+Foreground detection uses Win32 window bounds/window placement and falls back to `Mini` for the desktop shell and Winotch's own window.
