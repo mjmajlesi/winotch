@@ -107,6 +107,12 @@ public sealed class SystemStatsService : IDisposable
         try
         {
             var rates = _network.Sample(DateTimeOffset.UtcNow);
+            if (rates is null)
+            {
+                _networkSamples.Clear();
+                return null;
+            }
+
             _networkSamples.Push(rates.DownBytesPerSecond + rates.UpBytesPerSecond);
             return new SystemStatRowSnapshot(SystemStatsFormatter.FormatNetwork(rates), _networkSamples.Snapshot());
         }
@@ -217,9 +223,15 @@ internal sealed class NetworkThroughputSampler
     private Dictionary<string, NetworkCounterSnapshot> _previous = [];
     private DateTimeOffset? _previousAt;
 
-    public NetworkRates Sample(DateTimeOffset now)
+    public NetworkRates? Sample(DateTimeOffset now)
     {
         var current = NetworkCounterReader.ReadActivePhysicalAdapters();
+        if (current.Count == 0)
+        {
+            Reset();
+            return null;
+        }
+
         var rates = _previousAt is null
             ? new NetworkRates(0, 0)
             : NetworkRateCalculator.FromSnapshots(_previous.Values, current, now - _previousAt.Value);

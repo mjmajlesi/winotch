@@ -15,6 +15,7 @@ public enum CameraMirrorErrorKind
 {
     None,
     NoCamera,
+    AccessDenied,
     CameraInUse
 }
 
@@ -27,6 +28,7 @@ public readonly record struct CameraMirrorState(CameraMirrorPhase Phase, CameraM
     public string Message => Error switch
     {
         CameraMirrorErrorKind.NoCamera => "No camera available",
+        CameraMirrorErrorKind.AccessDenied => "Camera access denied",
         CameraMirrorErrorKind.CameraInUse => "Camera is in use",
         _ => ""
     };
@@ -46,6 +48,9 @@ public static class CameraMirrorLifecycle
         new(CameraMirrorPhase.Error, error);
 
     public static CameraMirrorState Close() => CameraMirrorState.Closed;
+
+    public static bool SuppressesCameraAlerts(CameraMirrorState state) =>
+        state.Phase is CameraMirrorPhase.Opening or CameraMirrorPhase.Live;
 }
 
 public static class CameraMirrorLayout

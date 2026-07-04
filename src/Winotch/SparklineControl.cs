@@ -27,7 +27,7 @@ public sealed class SparklineControl : FrameworkElement
 
     public IReadOnlyList<double> Values
     {
-        get => (IReadOnlyList<double>)GetValue(ValuesProperty);
+        get => (IReadOnlyList<double>?)GetValue(ValuesProperty) ?? [];
         set => SetValue(ValuesProperty, value);
     }
 

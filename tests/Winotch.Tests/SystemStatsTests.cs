@@ -35,7 +35,8 @@ public sealed class SystemStatsTests
             new NetworkCounterSnapshot("cellular", 9_000, 9_000)
         };
 
-        var rates = NetworkRateCalculator.FromSnapshots(previous, current, TimeSpan.FromSeconds(2));
+        var rates = Assert.IsType<NetworkRates>(
+            NetworkRateCalculator.FromSnapshots(previous, current, TimeSpan.FromSeconds(2)));
 
         Assert.Equal(512, rates.DownBytesPerSecond);
         Assert.Equal(512, rates.UpBytesPerSecond);
@@ -47,10 +48,21 @@ public sealed class SystemStatsTests
         var previous = new[] { new NetworkCounterSnapshot("wifi", 10_000, 5_000) };
         var current = new[] { new NetworkCounterSnapshot("wifi", 9_000, 4_500) };
 
-        var rates = NetworkRateCalculator.FromSnapshots(previous, current, TimeSpan.FromSeconds(1));
+        var rates = Assert.IsType<NetworkRates>(
+            NetworkRateCalculator.FromSnapshots(previous, current, TimeSpan.FromSeconds(1)));
 
         Assert.Equal(0, rates.DownBytesPerSecond);
         Assert.Equal(0, rates.UpBytesPerSecond);
+    }
+
+    [Fact]
+    public void NetworkRatesReturnNullWithoutCurrentAdapters()
+    {
+        var previous = new[] { new NetworkCounterSnapshot("wifi", 10_000, 5_000) };
+
+        var rates = NetworkRateCalculator.FromSnapshots(previous, [], TimeSpan.FromSeconds(1));
+
+        Assert.Null(rates);
     }
 
     [Theory]
@@ -111,6 +123,14 @@ public sealed class SystemStatsTests
         var points = SparklinePointMapper.Map([0, 0], capacity: 5, width: 41, height: 20);
 
         Assert.All(points, point => Assert.Equal(19, point.Y));
+    }
+
+    [Fact]
+    public void SparklineNullSeriesReturnsNoPoints()
+    {
+        var points = SparklinePointMapper.Map(null, capacity: 5, width: 41, height: 20);
+
+        Assert.Empty(points);
     }
 
     [Fact]

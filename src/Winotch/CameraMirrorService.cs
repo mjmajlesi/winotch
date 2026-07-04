@@ -10,6 +10,7 @@ namespace Winotch;
 
 public sealed class CameraMirrorService : IDisposable
 {
+    private const int HResultAccessDenied = unchecked((int)0x80070005);
     private readonly SemaphoreSlim _gate = new(1, 1);
     private MediaCapture? _capture;
     private MediaFrameReader? _reader;
@@ -73,7 +74,9 @@ public sealed class CameraMirrorService : IDisposable
             catch (Exception ex) when (ex is UnauthorizedAccessException || ex is COMException || ex is InvalidOperationException)
             {
                 await StopCaptureAsync();
-                return Fail(CameraMirrorErrorKind.CameraInUse);
+                return Fail(ex is UnauthorizedAccessException || ex.HResult == HResultAccessDenied
+                    ? CameraMirrorErrorKind.AccessDenied
+                    : CameraMirrorErrorKind.CameraInUse);
             }
         }
         finally

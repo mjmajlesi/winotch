@@ -275,7 +275,7 @@ public partial class MainWindow : Window
             ShowNotificationToast(notifications.Items[0]);
         }
 
-        var priorityAlert = _priorityAlerts.Next(priorityStatus, suppressCameraAlert: IsCameraMirrorOpen);
+        var priorityAlert = _priorityAlerts.Next(priorityStatus, suppressCameraAlert: ShouldSuppressCameraAlert);
         if (priorityAlert is not null && settings.Toasts.PriorityAlertsEnabled)
         {
             ShowPriorityAlertToast(priorityAlert, previousBatteryPercent);
@@ -1304,9 +1304,8 @@ public partial class MainWindow : Window
         return brush;
     }
 
-    private bool IsCameraMirrorOpen =>
-        _cameraMirrorWindow is not null ||
-        _cameraMirror.State.Phase is CameraMirrorPhase.Opening or CameraMirrorPhase.Live;
+    private bool ShouldSuppressCameraAlert =>
+        CameraMirrorLifecycle.SuppressesCameraAlerts(_cameraMirror.State);
 
     private async Task CloseCameraMirrorAsync()
     {

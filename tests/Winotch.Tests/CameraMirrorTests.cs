@@ -29,13 +29,30 @@ public class CameraMirrorTests
         Assert.Equal(CameraMirrorErrorKind.None, state.Error);
     }
 
-    [Fact]
-    public void LifecycleStoresQuietErrorMessage()
+    [Theory]
+    [InlineData(CameraMirrorErrorKind.NoCamera, "No camera available")]
+    [InlineData(CameraMirrorErrorKind.CameraInUse, "Camera is in use")]
+    [InlineData(CameraMirrorErrorKind.AccessDenied, "Camera access denied")]
+    public void LifecycleStoresQuietErrorMessage(CameraMirrorErrorKind error, string expected)
     {
-        var state = CameraMirrorLifecycle.Fail(CameraMirrorErrorKind.CameraInUse);
+        var state = CameraMirrorLifecycle.Fail(error);
 
         Assert.Equal(CameraMirrorPhase.Error, state.Phase);
-        Assert.Equal("Camera is in use", state.Message);
+        Assert.Equal(expected, state.Message);
+    }
+
+    [Theory]
+    [InlineData(CameraMirrorPhase.Closed, false)]
+    [InlineData(CameraMirrorPhase.Opening, true)]
+    [InlineData(CameraMirrorPhase.Live, true)]
+    [InlineData(CameraMirrorPhase.Error, false)]
+    public void LifecycleSuppressesCameraAlertsOnlyWhilePreviewCanOwnCamera(
+        CameraMirrorPhase phase,
+        bool expected)
+    {
+        var state = new CameraMirrorState(phase, CameraMirrorErrorKind.None);
+
+        Assert.Equal(expected, CameraMirrorLifecycle.SuppressesCameraAlerts(state));
     }
 
     [Theory]

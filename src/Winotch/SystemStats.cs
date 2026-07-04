@@ -48,12 +48,12 @@ public sealed record SparklinePoint(double X, double Y);
 public static class SparklinePointMapper
 {
     public static IReadOnlyList<SparklinePoint> Map(
-        IReadOnlyList<double> values,
+        IReadOnlyList<double>? values,
         int capacity,
         double width,
         double height)
     {
-        if (values.Count == 0 || capacity <= 1 || width <= 0 || height <= 0)
+        if (values is null || values.Count == 0 || capacity <= 1 || width <= 0 || height <= 0)
         {
             return [];
         }
@@ -93,11 +93,16 @@ public sealed record NetworkRates(double DownBytesPerSecond, double UpBytesPerSe
 
 public static class NetworkRateCalculator
 {
-    public static NetworkRates FromSnapshots(
+    public static NetworkRates? FromSnapshots(
         IEnumerable<NetworkCounterSnapshot> previous,
-        IEnumerable<NetworkCounterSnapshot> current,
+        IReadOnlyList<NetworkCounterSnapshot> current,
         TimeSpan elapsed)
     {
+        if (current.Count == 0)
+        {
+            return null;
+        }
+
         if (elapsed.TotalSeconds <= 0)
         {
             return new NetworkRates(0, 0);
