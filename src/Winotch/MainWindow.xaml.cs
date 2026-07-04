@@ -9,6 +9,8 @@ namespace Winotch;
 
 public partial class MainWindow : Window
 {
+    private static readonly System.Windows.Media.FontFamily ToastTextFont = new("Segoe UI Variable Text, Segoe UI");
+    private static readonly System.Windows.Media.FontFamily ToastIconFont = new("Segoe MDL2 Assets");
     private readonly DispatcherTimer _clockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly DispatcherTimer _statusTimer = new() { Interval = TimeSpan.FromSeconds(3) };
     private readonly DispatcherTimer _shellTimer = new() { Interval = TimeSpan.FromMilliseconds(700) };
@@ -21,6 +23,8 @@ public partial class MainWindow : Window
     private readonly MediaChangeTracker _mediaChanges = new();
     private readonly AccountPictureService _accountPicture = new();
     private readonly AppBarReservationService _appBar = new();
+    private readonly PriorityStatusService _priorityStatus = new();
+    private readonly PriorityStatusTracker _priorityAlerts = new();
     private bool _expanded;
     private bool _compactToastVisible;
     private bool _updatingVolume;
@@ -119,6 +123,7 @@ public partial class MainWindow : Window
             : usingConnectedFallback
                 ? $"{wifi.Name} connected. Scan needs Windows Location permission."
                 : $"Connected to {wifi.Name}";
+        var priorityStatus = _priorityStatus.Read(battery, wifi);
 
         var notifications = await _notifications.ReadAsync();
         NotificationStateText.Text = notifications.Status;
@@ -127,6 +132,12 @@ public partial class MainWindow : Window
         if (_notificationChanges.ShouldPop(notifications.Items) && !NotificationSilenceService.IsSilenced())
         {
             ShowNotificationToast(notifications.Items[0]);
+        }
+
+        var priorityAlert = _priorityAlerts.Next(priorityStatus);
+        if (priorityAlert is not null)
+        {
+            ShowPriorityAlertToast(priorityAlert);
         }
     }
 
@@ -254,6 +265,8 @@ public partial class MainWindow : Window
         NotificationToastBodyText.Text = notification.Body;
         NotificationToastAppText.Text = notification.App;
         NotificationToastTimeText.Text = notification.TimeText;
+        NotificationToastIconFallback.FontFamily = ToastTextFont;
+        NotificationToastIconFallback.FontSize = 16;
         NotificationToastIconFallback.Text = notification.BadgeText;
 
         var icon = MediaArtwork.FromBytes(notification.Icon);
@@ -261,14 +274,36 @@ public partial class MainWindow : Window
         NotificationToastIconImage.Visibility = icon is null ? Visibility.Collapsed : Visibility.Visible;
         NotificationToastIconFallback.Visibility = icon is null ? Visibility.Visible : Visibility.Collapsed;
 
-        _notificationToastActions = notification.Actions.Take(2).ToArray();
+        ApplyNotificationToastActions(notification.Actions);
+
+        ShowCompactToast(NotificationToastPanel);
+    }
+
+    private void ShowPriorityAlertToast(PriorityStatusAlert alert)
+    {
+        NotificationToastTitleText.Text = alert.Title;
+        NotificationToastBodyText.Text = alert.Body;
+        NotificationToastAppText.Text = "System Status";
+        NotificationToastTimeText.Text = "Now";
+        NotificationToastIconImage.Source = null;
+        NotificationToastIconImage.Visibility = Visibility.Collapsed;
+        NotificationToastIconFallback.FontFamily = ToastIconFont;
+        NotificationToastIconFallback.FontSize = 17;
+        NotificationToastIconFallback.Text = alert.Icon;
+        NotificationToastIconFallback.Visibility = Visibility.Visible;
+        ApplyNotificationToastActions([]);
+
+        ShowCompactToast(NotificationToastPanel);
+    }
+
+    private void ApplyNotificationToastActions(IReadOnlyList<NotificationAction> actions)
+    {
+        _notificationToastActions = actions.Take(2).ToArray();
         NotificationToastActionsPanel.Visibility = _notificationToastActions.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         NotificationToastPrimaryActionButton.Visibility = _notificationToastActions.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         NotificationToastSecondaryActionButton.Visibility = _notificationToastActions.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
         NotificationToastPrimaryActionText.Text = _notificationToastActions.Count > 0 ? _notificationToastActions[0].Label : "";
         NotificationToastSecondaryActionText.Text = _notificationToastActions.Count > 1 ? _notificationToastActions[1].Label : "";
-
-        ShowCompactToast(NotificationToastPanel);
     }
 
     private void ShowCompactToast(FrameworkElement panel)

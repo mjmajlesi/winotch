@@ -1,6 +1,6 @@
 # Winotch
 
-Winotch is a native Windows notch overlay. It stays centered at the top of the primary screen and shows time, date, battery, Wi-Fi, volume, current media, and Windows notifications in a compact black shell that expands on hover. Media track changes and unsilenced Windows notifications use brief compact toasts.
+Winotch is a native Windows notch overlay. It stays centered at the top of the primary screen and shows time, date, battery, Wi-Fi, volume, current media, and Windows notifications in a compact black shell that expands on hover. Media track changes, unsilenced Windows notifications, and priority system status changes use brief compact toasts.
 
 ## Stack
 
@@ -11,6 +11,7 @@ Winotch is a native Windows notch overlay. It stays centered at the top of the p
 - Windows system media transport controls for current audio metadata, artwork, and playback actions
 - `netsh wlan` for Wi-Fi status, network listing, and saved-profile connect attempts
 - `UserNotificationListener` for Windows toast notification access when the OS grants permission
+- Windows Bluetooth and privacy status APIs for connected-device and mic/camera alerts
 
 WPF is the first implementation because it gives direct transparent-window and desktop interop support with a simple CLI build/run loop.
 
@@ -28,7 +29,7 @@ From the repository root:
 dotnet run --project src/Winotch/Winotch.csproj
 ```
 
-Hover the notch to expand it. The volume slider changes the system master volume. Media buttons control the focused Windows media session in the expanded capsule and in the brief media toast. Notification toasts show app/sender text, time, and available live Windows action buttons when the OS exposes them. Wi-Fi connect works for saved Windows Wi-Fi profiles.
+Hover the notch to expand it. The volume slider changes the system master volume. Media buttons control the focused Windows media session in the expanded capsule and in the brief media toast. Notification toasts show app/sender text, time, and available live Windows action buttons when the OS exposes them. Priority status toasts appear for low battery, charger connect/disconnect, Wi-Fi loss/reconnect, Bluetooth device connect, and mic/camera activity. Wi-Fi connect works for saved Windows Wi-Fi profiles.
 
 ## Test
 
@@ -38,7 +39,7 @@ Run the full regression suite before sharing a build:
 dotnet test Winotch.slnx
 ```
 
-The tests cover Wi-Fi parsing, battery fill/color thresholds, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, shell mode/fullscreen heuristics, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
+The tests cover Wi-Fi parsing, battery fill/color thresholds, media toast geometry/timing and dedupe behavior, notification toast metadata/actions/dedupe behavior, priority status alert transitions, shell mode/fullscreen heuristics, app-bar DPI conversion, refresh-rate normalization, and animation timing guards.
 
 ## Install
 

@@ -369,6 +369,81 @@ public class StatusParsingTests
         Assert.True(invoked);
     }
 
+    [Fact]
+    public void PriorityStatusTrackerSuppressesRoutineInitialState()
+    {
+        var tracker = new PriorityStatusTracker();
+
+        Assert.Null(tracker.Next(Status()));
+    }
+
+    [Fact]
+    public void PriorityStatusTrackerPopsLowBatteryOnceUntilRecovery()
+    {
+        var tracker = new PriorityStatusTracker();
+
+        Assert.Equal("Low battery", tracker.Next(Status(percent: 19))?.Title);
+        Assert.Null(tracker.Next(Status(percent: 19)));
+        Assert.Null(tracker.Next(Status(percent: 18)));
+        Assert.Null(tracker.Next(Status(percent: 40)));
+        Assert.Equal("Low battery", tracker.Next(Status(percent: 20))?.Title);
+    }
+
+    [Fact]
+    public void PriorityStatusTrackerPopsChargerTransitions()
+    {
+        var tracker = new PriorityStatusTracker();
+
+        Assert.Null(tracker.Next(Status(percent: 60, charging: false)));
+        Assert.Equal("Charger connected", tracker.Next(Status(percent: 61, charging: true))?.Title);
+        Assert.Equal("Charger disconnected", tracker.Next(Status(percent: 62, charging: false))?.Title);
+    }
+
+    [Fact]
+    public void PriorityStatusTrackerPopsWifiLossAndReconnect()
+    {
+        var tracker = new PriorityStatusTracker();
+
+        Assert.Null(tracker.Next(Status(wifi: "TELUS1255")));
+        Assert.Equal("Wi-Fi disconnected", tracker.Next(Status(wifi: null))?.Title);
+        Assert.Equal("Wi-Fi reconnected", tracker.Next(Status(wifi: "TELUS1255"))?.Title);
+        Assert.Equal("Wi-Fi reconnected", tracker.Next(Status(wifi: "Guest"))?.Title);
+    }
+
+    [Fact]
+    public void PriorityStatusTrackerPopsBluetoothConnectsOnly()
+    {
+        var tracker = new PriorityStatusTracker();
+
+        Assert.Null(tracker.Next(Status(bluetooth: null)));
+        Assert.Equal("Bluetooth connected", tracker.Next(Status(bluetooth: "Headphones"))?.Title);
+        Assert.Null(tracker.Next(Status(bluetooth: "Headphones")));
+        Assert.Null(tracker.Next(Status(bluetooth: null)));
+    }
+
+    [Fact]
+    public void PriorityStatusTrackerQueuesInitialCriticalAlerts()
+    {
+        var tracker = new PriorityStatusTracker();
+        var status = Status(percent: 12, microphone: true, camera: true);
+
+        Assert.Equal("Camera active", tracker.Next(status)?.Title);
+        Assert.Equal("Microphone active", tracker.Next(status)?.Title);
+        Assert.Equal("Low battery", tracker.Next(status)?.Title);
+        Assert.Null(tracker.Next(status));
+    }
+
+    [Theory]
+    [InlineData(100L, 0L, true)]
+    [InlineData(null, 0L, false)]
+    [InlineData(100L, null, false)]
+    [InlineData(100L, 20L, false)]
+    [InlineData(0L, 0L, false)]
+    public void PrivacyUseRequiresStartedAndUnstopped(long? start, long? stop, bool expected)
+    {
+        Assert.Equal(expected, PriorityStatusService.IsActivePrivacyUse(start, stop));
+    }
+
     [Theory]
     [InlineData("", "", "", false, "Now playing", "Unknown artist")]
     [InlineData("", "", "MediaHost.exe", true, "Now playing", "Media Host")]
@@ -570,4 +645,13 @@ public class StatusParsingTests
 
     private static MediaSnapshot Media(string title, string artist, MediaState state) =>
         new(title, artist, "Brave", null, state, true, true, true, true);
+
+    private static PriorityStatusSnapshot Status(
+        int percent = 80,
+        bool charging = false,
+        string? wifi = "TELUS1255",
+        string? bluetooth = null,
+        bool microphone = false,
+        bool camera = false) =>
+        new(new BatteryInfo(percent, charging), new WifiStatus(wifi, "96%"), bluetooth, microphone, camera);
 }
