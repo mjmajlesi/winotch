@@ -1,4 +1,6 @@
 ﻿using System.Text;
+using System.ComponentModel;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -25,9 +27,14 @@ public partial class MainWindow : Window
     private readonly AppBarReservationService _appBar = new();
     private readonly PriorityStatusService _priorityStatus = new();
     private readonly PriorityStatusTracker _priorityAlerts = new();
+    private readonly SettingsService _settings = new();
+    private readonly StartupService _startup = new();
+    private readonly TrayIconService _trayIcon;
     private bool _expanded;
     private bool _compactToastVisible;
     private bool _updatingVolume;
+    private bool _notchPaused;
+    private bool _exitRequested;
     private int _animationFrameRate = 60;
     private DateTime _ignoreHoverUntilUtc;
     private CancellationTokenSource? _expandedReveal;
@@ -38,6 +45,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        _trayIcon = new TrayIconService(this, _settings, _startup);
+        _settings.Changed += Settings_Changed;
         _clockTimer.Tick += (_, _) => UpdateClock();
         _statusTimer.Tick += async (_, _) => await RefreshStatusAsync();
         _shellTimer.Tick += (_, _) => ApplyShellMode(ForegroundWindowService.DetectShellMode(), animate: false);
@@ -51,6 +60,7 @@ public partial class MainWindow : Window
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
         _animationFrameRate = DisplayRefreshRateService.GetPrimaryRefreshRate();
+        SyncStartupSetting();
         ApplyShellMode(ForegroundWindowService.DetectShellMode(), animate: false);
         UpdateClock();
         _clockTimer.Start();
@@ -76,14 +86,22 @@ public partial class MainWindow : Window
     private void UpdateClock()
     {
         var now = DateTime.Now;
-        TimeText.Text = now.ToString("h:mm tt");
-        DateText.Text = now.ToString("ddd, MMM d");
-        LargeTimeText.Text = now.ToString("HH:mm:ss");
-        LargeDateText.Text = now.ToString("dddd, MMMM d");
+        var general = _settings.Current.General;
+        TimeText.Text = now.ToString(general.Use24HourClock ? "HH:mm" : "h:mm tt", CultureInfo.CurrentCulture);
+        DateText.Text = now.ToString("ddd, MMM d", CultureInfo.CurrentCulture);
+        LargeTimeText.Text = now.ToString(general.Use24HourClock ? "HH:mm:ss" : "h:mm:ss tt", CultureInfo.CurrentCulture);
+        LargeDateText.Text = now.ToString("dddd, MMMM d", CultureInfo.CurrentCulture);
+        LargeDateText.Visibility = general.ShowDate ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async Task RefreshStatusAsync()
     {
+        if (_notchPaused)
+        {
+            return;
+        }
+
+        var settings = _settings.Current;
         var battery = SystemStatus.GetBattery();
         var batteryVisual = BatteryVisual.FromPercent(battery.Percent, battery.IsCharging);
         BatteryFill.Width = batteryVisual.FillWidth;
@@ -101,7 +119,7 @@ public partial class MainWindow : Window
 
         var media = await _media.ReadAsync();
         ApplyMedia(media);
-        if (_mediaChanges.ShouldPop(media))
+        if (_mediaChanges.ShouldPop(media) && settings.Toasts.MediaToastsEnabled)
         {
             ShowMediaToast();
         }
@@ -129,16 +147,61 @@ public partial class MainWindow : Window
         NotificationStateText.Text = notifications.Status;
         NotificationCountText.Text = notifications.Items.Count.ToString();
         NotificationList.ItemsSource = notifications.Items;
-        if (_notificationChanges.ShouldPop(notifications.Items) && !NotificationSilenceService.IsSilenced())
+        if (_notificationChanges.ShouldPop(notifications.Items) &&
+            settings.Toasts.NotificationToastsEnabled &&
+            !NotificationSilenceService.IsSilenced())
         {
             ShowNotificationToast(notifications.Items[0]);
         }
 
         var priorityAlert = _priorityAlerts.Next(priorityStatus);
-        if (priorityAlert is not null)
+        if (priorityAlert is not null && settings.Toasts.PriorityAlertsEnabled)
         {
             ShowPriorityAlertToast(priorityAlert);
         }
+    }
+
+    public bool IsNotchPaused => _notchPaused;
+
+    public void SetNotchPaused(bool paused)
+    {
+        if (_notchPaused == paused)
+        {
+            return;
+        }
+
+        _notchPaused = paused;
+        if (paused)
+        {
+            _clockTimer.Stop();
+            _statusTimer.Stop();
+            _shellTimer.Stop();
+            _collapseTimer.Stop();
+            _expandedReveal?.Cancel();
+            _expandedReveal?.Dispose();
+            _expandedReveal = null;
+            _expanded = false;
+            HideCompactToast(restoreShell: false);
+            _appBar.Release();
+            Hide();
+            return;
+        }
+
+        Show();
+        _animationFrameRate = DisplayRefreshRateService.GetPrimaryRefreshRate();
+        ApplyShellMode(ForegroundWindowService.DetectShellMode(), animate: false);
+        UpdateClock();
+        _clockTimer.Start();
+        _statusTimer.Start();
+        _shellTimer.Start();
+        _ = RefreshStatusAsync();
+    }
+
+    public void ExitFromTray()
+    {
+        _exitRequested = true;
+        Close();
+        System.Windows.Application.Current.Shutdown();
     }
 
     private void ApplyMedia(MediaSnapshot media)
@@ -337,7 +400,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            await Task.Delay(ShellAnimationTiming.MediaToastDuration, cancellationToken);
+            await Task.Delay(_settings.Current.Toasts.DurationScale.ApplyTo(ShellAnimationTiming.MediaToastDuration), cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -407,7 +470,15 @@ public partial class MainWindow : Window
         ClockGroup.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
         HeaderRow.Height = new GridLength(48);
         NotchShell.Padding = new Thickness(18, 8, 18, 12);
-        ShellAnimator.Show(DateText, _animationFrameRate);
+        if (_settings.Current.General.ShowDate)
+        {
+            ShellAnimator.Show(DateText, _animationFrameRate);
+        }
+        else
+        {
+            ShellAnimator.Hide(DateText);
+        }
+
         ShellAnimator.Show(StatusGroup, _animationFrameRate);
     }
 
@@ -538,12 +609,56 @@ public partial class MainWindow : Window
         await RefreshStatusAsync();
     }
 
+    private void Settings_Changed(object? sender, WinotchSettings settings)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            UpdateClock();
+            if (!_expanded || !settings.General.ShowDate)
+            {
+                ShellAnimator.Hide(DateText);
+            }
+            else
+            {
+                ShellAnimator.Show(DateText, _animationFrameRate);
+            }
+        });
+    }
+
+    private void SyncStartupSetting()
+    {
+        var state = _startup.GetState(StartupService.CurrentExecutablePath());
+        if (!state.CanAccess)
+        {
+            return;
+        }
+
+        _settings.Update(settings => settings with
+        {
+            General = settings.General with { StartWithWindows = state.IsEnabled }
+        });
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        if (!_exitRequested)
+        {
+            e.Cancel = true;
+            SetNotchPaused(true);
+            return;
+        }
+
+        base.OnClosing(e);
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         _expandedReveal?.Cancel();
         _expandedReveal?.Dispose();
         _compactToastHide?.Cancel();
         _compactToastHide?.Dispose();
+        _trayIcon.Dispose();
+        _settings.Changed -= Settings_Changed;
         _appBar.Dispose();
         _notifications.Dispose();
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
