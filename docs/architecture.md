@@ -41,7 +41,14 @@ flowchart LR
 
 ## Motion
 
-The resting notch is a compact top-attached pill. Hover and notification activity expand width, height, and detail opacity with a short ease-out animation, matching the supplied reference direction without adding a custom animation engine.
+The resting notch is a compact top-attached pill. Hover and notification activity expand width and height with WPF-native property animations. Detail content begins fading in during the geometry morph, while the header/status layout switches after the shell settles so it does not jump mid-transition.
+
+Animation timings live in `ShellAnimationTiming`:
+
+- `MotionMilliseconds`: width, height, and left-position transition duration.
+- `FadeMilliseconds`: detail/header fade duration.
+- `DetailRevealDelayMilliseconds`: delay before the expanded panel begins fading in during the geometry morph.
+- `CollapseGuardMilliseconds`: pointer-exit delay. It intentionally outlasts the geometry motion so a brief hover miss cannot cancel expansion halfway through.
 
 ## Shell States
 
@@ -49,4 +56,17 @@ The resting notch is a compact top-attached pill. Hover and notification activit
 - `FullBar`: full-width top bar when the foreground app is maximized or fills the screen.
 - `Expanded`: larger centered island on hover or unsilenced notification activity.
 
-Foreground detection uses Win32 window bounds/window placement and falls back to `Mini` for the desktop shell and Winotch's own window.
+Foreground detection uses Win32 window bounds/window placement and falls back to `Mini` for the desktop shell and Winotch's own window. When Winotch owns foreground, fallback app-window scanning ignores shell, hidden, minimized, own, and tiny utility windows so minimized apps do not force the full-width bar.
+
+## Test Strategy
+
+The automated suite focuses on deterministic logic that would otherwise surface as visual bugs:
+
+- Wi-Fi netsh/profile parsing, de-duplication, blank values, and visible list limits.
+- Battery icon fill width, clamp behavior, charging color, and low-power thresholds.
+- Notification signature generation, first-run suppression, empty snapshot behavior, and repeat suppression.
+- Foreground mode heuristics for desktop, own window, maximized apps, screen-filling apps, and near-threshold windows.
+- Fallback app-window filtering so hidden, minimized, shell, own, and tiny windows cannot force full-bar mode.
+- App-bar DIP-to-physical-pixel conversion across DPI scales.
+- Display refresh-rate normalization for high-refresh monitors and invalid OS values.
+- Shell metrics and timing guards for centered mini/expanded states and non-interrupted hover expansion.

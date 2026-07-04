@@ -67,6 +67,19 @@ public static class ForegroundWindowService
         return isMaximized || fillsScreen || fillsWorkArea ? ShellMode.FullBar : ShellMode.Mini;
     }
 
+    public static bool IsCandidateAppWindow(
+        bool isVisible,
+        bool isOwnWindow,
+        bool isShell,
+        bool isMinimized,
+        NativeRect rect) =>
+        isVisible &&
+        !isOwnWindow &&
+        !isShell &&
+        !isMinimized &&
+        rect.Width > 160 &&
+        rect.Height > 120;
+
     private static bool TryGetMonitorRects(IntPtr window, out NativeRect monitorRect, out NativeRect workAreaRect)
     {
         var monitor = MonitorFromWindow(window, 2);
@@ -102,12 +115,17 @@ public static class ForegroundWindowService
 
     private static bool IsAppWindow(IntPtr window)
     {
-        if (!IsWindowVisible(window) || IsOwnWindow(window) || IsShellClass(GetClassName(window)))
+        if (!GetWindowRect(window, out var rect))
         {
             return false;
         }
 
-        return GetWindowRect(window, out var rect) && rect.Width > 160 && rect.Height > 120;
+        return IsCandidateAppWindow(
+            IsWindowVisible(window),
+            IsOwnWindow(window),
+            IsShellClass(GetClassName(window)),
+            IsIconic(window),
+            rect);
     }
 
     private static bool IsOwnWindow(IntPtr window)
@@ -152,6 +170,9 @@ public static class ForegroundWindowService
 
     [DllImport("user32.dll")]
     private static extern bool IsWindowVisible(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool IsIconic(IntPtr hWnd);
 
     private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 }

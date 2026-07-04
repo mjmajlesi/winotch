@@ -11,7 +11,7 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _clockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly DispatcherTimer _statusTimer = new() { Interval = TimeSpan.FromSeconds(3) };
     private readonly DispatcherTimer _shellTimer = new() { Interval = TimeSpan.FromMilliseconds(700) };
-    private readonly DispatcherTimer _collapseTimer = new() { Interval = TimeSpan.FromMilliseconds(180) };
+    private readonly DispatcherTimer _collapseTimer = new() { Interval = ShellAnimationTiming.CollapseGuard };
     private readonly AudioService _audio = new();
     private readonly WifiService _wifi = new();
     private readonly NotificationService _notifications = new();
@@ -144,22 +144,22 @@ public partial class MainWindow : Window
         _expandedReveal = null;
         if (!expanded)
         {
-            ApplyShellMode(ForegroundWindowService.DetectShellMode(), animate: false);
+            ApplyShellMode(ForegroundWindowService.DetectShellMode());
             return;
         }
 
         ShellAnimator.Hide(DateText);
         ShellAnimator.Hide(StatusGroup);
-        ClockGroup.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+        ClockGroup.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
         ApplyHeaderDensity(isFullBar: false);
         _appBar.Release();
         SetMouseTransparent(false);
-        HeaderRow.Height = new GridLength(48);
-        NotchShell.Padding = new Thickness(18, 8, 18, 12);
+        HeaderRow.Height = new GridLength(28);
+        NotchShell.Padding = new Thickness(10, 4, 10, 6);
         NotchShell.CornerRadius = new CornerRadius(0, 0, 34, 34);
         ShellAnimator.Clear(this, NotchShell, DetailPanel);
         DetailPanel.Opacity = 0;
-        ShellAnimator.AnimateShell(this, NotchShell, ShellMetrics.Expanded(SystemParameters.PrimaryScreenWidth));
+        ShellAnimator.AnimateShell(this, NotchShell, ShellMetrics.Expanded(SystemParameters.PrimaryScreenWidth), _animationFrameRate);
         _expandedReveal = new CancellationTokenSource();
         _ = RevealExpandedContentAsync(_expandedReveal.Token);
     }
@@ -178,7 +178,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            await Task.Delay(150, cancellationToken);
+            await Task.Delay(ShellAnimationTiming.DetailRevealDelay, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -190,9 +190,26 @@ public partial class MainWindow : Window
             return;
         }
 
+        ShellAnimator.Animate(DetailPanel, OpacityProperty, 1, _animationFrameRate);
+        try
+        {
+            await Task.Delay(ShellAnimationTiming.MotionDuration - ShellAnimationTiming.DetailRevealDelay, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (!_expanded || cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        ClockGroup.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+        HeaderRow.Height = new GridLength(48);
+        NotchShell.Padding = new Thickness(18, 8, 18, 12);
         ShellAnimator.Show(DateText, _animationFrameRate);
         ShellAnimator.Show(StatusGroup, _animationFrameRate);
-        ShellAnimator.Animate(DetailPanel, OpacityProperty, 1, _animationFrameRate);
     }
 
     private void ApplyShellMode(ShellMode mode, bool animate = true)
@@ -225,7 +242,7 @@ public partial class MainWindow : Window
         if (animate)
         {
             ShellAnimator.Animate(DetailPanel, OpacityProperty, 0, _animationFrameRate);
-            ShellAnimator.AnimateShell(this, NotchShell, geometry);
+            ShellAnimator.AnimateShell(this, NotchShell, geometry, _animationFrameRate);
             SetMouseTransparent(isFullBar);
             return;
         }

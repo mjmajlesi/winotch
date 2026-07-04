@@ -31,6 +31,33 @@ public class StatusParsingTests
         Assert.Equal("TELUS1255", status);
     }
 
+    [Theory]
+    [InlineData("", null)]
+    [InlineData("   \r\n\t", null)]
+    [InlineData("Coffee Shop 12\r\n", "Coffee Shop")]
+    [InlineData("TELUS1255\r\n", "TELUS1255")]
+    public void ProfileParserHandlesEmptyAndIndexedNames(string output, string? expected)
+    {
+        Assert.Equal(expected, WifiService.ParseCurrentProfile(output));
+    }
+
+    [Fact]
+    public void NetshParserIgnoresBssidWhenNoConnectedSsidExists()
+    {
+        var output = """
+            There is 1 interface on the system:
+
+                Name                   : Wi-Fi
+                State                  : disconnected
+                BSSID                  : 00:11:22:33:44:55
+            """;
+
+        var status = WifiService.ParseCurrentNetsh(output);
+
+        Assert.Null(status.Name);
+        Assert.Null(status.Signal);
+    }
+
     [Fact]
     public void NetworkParserDeduplicatesScannedNetworks()
     {
@@ -54,6 +81,63 @@ public class StatusParsingTests
             second => Assert.Equal("Guest", second.Name));
     }
 
+    [Fact]
+    public void NetworkParserSkipsBlankNamesAndCapsTheVisibleList()
+    {
+        var output = string.Join(
+            Environment.NewLine,
+            new[]
+            {
+                "SSID 1 :    ",
+                "    Signal                  : 12%",
+                "SSID 2 : Network-1",
+                "    Signal                  : 91%",
+                "SSID 3 : Network-2",
+                "    Signal                  : 82%",
+                "SSID 4 : Network-3",
+                "    Signal                  : 73%",
+                "SSID 5 : Network-4",
+                "    Signal                  : 64%",
+                "SSID 6 : Network-5",
+                "    Signal                  : 55%",
+                "SSID 7 : Network-6",
+                "    Signal                  : 46%",
+                "SSID 8 : Network-7",
+                "    Signal                  : 37%",
+                "SSID 9 : Network-8",
+                "    Signal                  : 28%",
+                "SSID 10 : Network-9",
+                "    Signal                  : 19%"
+            });
+
+        var networks = WifiService.ParseNetworks(output);
+
+        Assert.Equal(8, networks.Count);
+        Assert.Equal("Network-1", networks[0].Name);
+        Assert.Equal("91%", networks[0].Signal);
+        Assert.Equal("Network-8", networks[^1].Name);
+        Assert.DoesNotContain(networks, network => string.IsNullOrWhiteSpace(network.Name));
+    }
+
+    [Theory]
+    [InlineData(null, "")]
+    [InlineData("", "")]
+    [InlineData("   ", "")]
+    [InlineData("99%", "99%")]
+    public void WifiStatusOmitsBlankSignalText(string? signal, string expected)
+    {
+        Assert.Equal(expected, new WifiStatus("TELUS1255", signal).SignalText);
+    }
+
+    [Theory]
+    [InlineData("", "TELUS1255")]
+    [InlineData("   ", "TELUS1255")]
+    [InlineData("99%", "TELUS1255 (99%)")]
+    public void WifiNetworkDisplayTextIncludesSignalOnlyWhenPresent(string signal, string expected)
+    {
+        Assert.Equal(expected, new WifiNetwork("TELUS1255", signal).ToString());
+    }
+
     [Theory]
     [InlineData(96, false, 15.36, 246, 246, 244)]
     [InlineData(96, true, 15.36, 50, 215, 75)]
@@ -65,6 +149,32 @@ public class StatusParsingTests
         var brush = Assert.IsType<SolidColorBrush>(visual.Brush);
 
         Assert.Equal(expectedWidth, visual.FillWidth, precision: 2);
+        Assert.Equal(Color.FromRgb(red, green, blue), brush.Color);
+    }
+
+    [Theory]
+    [InlineData(-10, 0)]
+    [InlineData(0, 0)]
+    [InlineData(100, 16)]
+    [InlineData(200, 16)]
+    public void BatteryVisualClampsFillToIconInterior(int percent, double expectedWidth)
+    {
+        var visual = BatteryVisual.FromPercent(percent);
+
+        Assert.Equal(expectedWidth, visual.FillWidth, precision: 2);
+    }
+
+    [Theory]
+    [InlineData(50, 246, 246, 244)]
+    [InlineData(49, 255, 204, 0)]
+    [InlineData(20, 255, 204, 0)]
+    [InlineData(19, 255, 69, 58)]
+    [InlineData(5, 50, 215, 75)]
+    public void BatteryVisualUsesExpectedThresholdColors(int percent, byte red, byte green, byte blue)
+    {
+        var visual = BatteryVisual.FromPercent(percent, isCharging: percent == 5);
+        var brush = Assert.IsType<SolidColorBrush>(visual.Brush);
+
         Assert.Equal(Color.FromRgb(red, green, blue), brush.Color);
     }
 
@@ -93,6 +203,55 @@ public class StatusParsingTests
         Assert.Equal(ShellMode.FullBar, ForegroundWindowService.DecideMode(isOwnWindow: false, isShell: false, isMaximized: false, fillingReservedWorkArea, monitor, reservedWorkArea));
     }
 
+    [Fact]
+    public void ForegroundModeUsesMiniWhenScreenFillingThresholdsAreNotMet()
+    {
+        var monitor = new NativeRect(0, 0, 1000, 1000);
+        var narrow = new NativeRect(0, 0, 899, 900);
+        var belowHeight = new NativeRect(0, 0, 1000, 779);
+        var shiftedDown = new NativeRect(0, 9, 1000, 900);
+
+        Assert.Equal(ShellMode.Mini, ForegroundWindowService.DecideMode(isOwnWindow: false, isShell: false, isMaximized: false, narrow, monitor, monitor));
+        Assert.Equal(ShellMode.Mini, ForegroundWindowService.DecideMode(isOwnWindow: false, isShell: false, isMaximized: false, belowHeight, monitor, monitor));
+        Assert.Equal(ShellMode.Mini, ForegroundWindowService.DecideMode(isOwnWindow: false, isShell: false, isMaximized: false, shiftedDown, monitor, monitor));
+    }
+
+    [Fact]
+    public void ForegroundModeUsesFullBarAtCoverageThreshold()
+    {
+        var monitor = new NativeRect(0, 0, 1000, 1000);
+        var threshold = new NativeRect(0, 8, 900, 788);
+
+        Assert.Equal(ShellMode.FullBar, ForegroundWindowService.DecideMode(isOwnWindow: false, isShell: false, isMaximized: false, threshold, monitor, monitor));
+    }
+
+    [Theory]
+    [InlineData(true, false, false, false, 200, 160, true)]
+    [InlineData(false, false, false, false, 200, 160, false)]
+    [InlineData(true, true, false, false, 200, 160, false)]
+    [InlineData(true, false, true, false, 200, 160, false)]
+    [InlineData(true, false, false, true, 200, 160, false)]
+    [InlineData(true, false, false, false, 160, 160, false)]
+    [InlineData(true, false, false, false, 200, 120, false)]
+    public void CandidateAppWindowFilterRejectsShellOwnMinimizedAndTinyWindows(
+        bool isVisible,
+        bool isOwnWindow,
+        bool isShell,
+        bool isMinimized,
+        int width,
+        int height,
+        bool expected)
+    {
+        var rect = new NativeRect(10, 20, 10 + width, 20 + height);
+
+        Assert.Equal(expected, ForegroundWindowService.IsCandidateAppWindow(
+            isVisible,
+            isOwnWindow,
+            isShell,
+            isMinimized,
+            rect));
+    }
+
     [Theory]
     [InlineData(null, false)]
     [InlineData(0, true)]
@@ -116,12 +275,55 @@ public class StatusParsingTests
         Assert.False(tracker.ShouldPop([]));
     }
 
+    [Fact]
+    public void NotificationChangeTrackerTreatsBodyAndOrderAsPartOfSignature()
+    {
+        var first = new[]
+        {
+            new NotificationItem("Mail", "One", "Body"),
+            new NotificationItem("Chat", "Two", "Body")
+        };
+        var reordered = first.Reverse().ToArray();
+        var changedBody = new[]
+        {
+            new NotificationItem("Mail", "One", "Different"),
+            new NotificationItem("Chat", "Two", "Body")
+        };
+
+        Assert.NotEqual(
+            NotificationChangeTracker.CreateSignature(first),
+            NotificationChangeTracker.CreateSignature(reordered));
+        Assert.NotEqual(
+            NotificationChangeTracker.CreateSignature(first),
+            NotificationChangeTracker.CreateSignature(changedBody));
+    }
+
+    [Fact]
+    public void NotificationChangeTrackerPopsWhenNotificationsReturnAfterEmptySnapshot()
+    {
+        var tracker = new NotificationChangeTracker();
+        var item = new[] { new NotificationItem("Mail", "One", "Body") };
+
+        Assert.False(tracker.ShouldPop(item));
+        Assert.False(tracker.ShouldPop([]));
+        Assert.True(tracker.ShouldPop(item));
+    }
+
+    [Fact]
+    public void NotificationItemFormatsReadableDisplayText()
+    {
+        Assert.Equal("Mail: Subject Body text", new NotificationItem("Mail", "Subject", "Body text").ToString());
+    }
+
     [Theory]
     [InlineData(0, 60)]
     [InlineData(24, 60)]
+    [InlineData(29, 60)]
+    [InlineData(30, 30)]
     [InlineData(60, 60)]
     [InlineData(120, 120)]
     [InlineData(144, 144)]
+    [InlineData(500, 500)]
     [InlineData(501, 60)]
     public void RefreshRateFallsBackOnlyForInvalidValues(int refreshRate, int expected)
     {
@@ -133,6 +335,7 @@ public class StatusParsingTests
     [InlineData(34, 1.25, 43)]
     [InlineData(34, 1.5, 51)]
     [InlineData(0, 1.0, 1)]
+    [InlineData(10, -1.0, 1)]
     public void AppBarHeightUsesPhysicalPixels(double dip, double dpiScale, int expected)
     {
         Assert.Equal(expected, AppBarReservationService.ToPhysicalPixels(dip, dpiScale));
@@ -148,13 +351,32 @@ public class StatusParsingTests
     }
 
     [Fact]
-    public void ShellEaseOutIsClampedAndMonotonic()
+    public void ShellMetricsKeepAllStatesTopAttachedAndCenteredWhereExpected()
     {
-        Assert.Equal(0, ShellAnimator.EaseOut(-1));
-        Assert.Equal(0, ShellAnimator.EaseOut(0));
-        Assert.True(ShellAnimator.EaseOut(0.25) < ShellAnimator.EaseOut(0.5));
-        Assert.True(ShellAnimator.EaseOut(0.5) < ShellAnimator.EaseOut(0.75));
-        Assert.Equal(1, ShellAnimator.EaseOut(1));
-        Assert.Equal(1, ShellAnimator.EaseOut(2));
+        var mini = ShellMetrics.ForMode(isFullBar: false, screenWidth: 1919);
+        var fullBar = ShellMetrics.ForMode(isFullBar: true, screenWidth: 1919);
+        var expanded = ShellMetrics.Expanded(1919);
+
+        Assert.Equal(ShellMetrics.MiniWidth, mini.Width);
+        Assert.Equal(849.5, mini.Left);
+        Assert.Equal(1919, fullBar.Width);
+        Assert.Equal(0, fullBar.Left);
+        Assert.Equal(539.5, expanded.Left);
+        Assert.True(expanded.WindowHeight > expanded.ShellHeight);
     }
+
+    [Fact]
+    public void HoverCollapseGuardOutlastsShellMotion()
+    {
+        Assert.True(
+            ShellAnimationTiming.CollapseGuardMilliseconds >= ShellAnimationTiming.MotionMilliseconds + 150,
+            "Pointer-exit collapse must not interrupt the mini-to-expanded shell animation.");
+    }
+
+    [Fact]
+    public void DetailRevealStartsDuringShellMotion()
+    {
+        Assert.InRange(ShellAnimationTiming.DetailRevealDelayMilliseconds, 1, ShellAnimationTiming.MotionMilliseconds - 1);
+    }
+
 }

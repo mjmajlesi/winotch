@@ -1,20 +1,17 @@
-using System.Diagnostics;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 
 namespace Winotch;
 
 public static class ShellAnimator
 {
-    private static readonly TimeSpan MotionDuration = TimeSpan.FromMilliseconds(380);
-    private static readonly Duration FadeDuration = new(TimeSpan.FromMilliseconds(180));
-    private static readonly IEasingFunction Easing = new QuinticEase { EasingMode = EasingMode.EaseOut };
-    private static Action? _stopShellAnimation;
+    private static readonly Duration MotionDuration = new(ShellAnimationTiming.MotionDuration);
+    private static readonly Duration FadeDuration = new(ShellAnimationTiming.FadeDuration);
+    private static readonly IEasingFunction Easing = new QuarticEase { EasingMode = EasingMode.EaseOut };
 
     public static void Animate(UIElement target, DependencyProperty property, double value, int frameRate)
     {
-        var animation = new DoubleAnimation(value, new Duration(MotionDuration))
+        var animation = new DoubleAnimation(value, MotionDuration)
         {
             EasingFunction = Easing
         };
@@ -40,42 +37,18 @@ public static class ShellAnimator
         target.BeginAnimation(UIElement.OpacityProperty, animation, HandoffBehavior.SnapshotAndReplace);
     }
 
-    public static void AnimateShell(Window window, FrameworkElement shell, ShellGeometry geometry)
+    public static void AnimateShell(Window window, FrameworkElement shell, ShellGeometry geometry, int frameRate)
     {
-        _stopShellAnimation?.Invoke();
         window.Top = 0;
-        var start = new ShellGeometry(
-            Current(window.Width, window.ActualWidth),
-            Current(shell.Height, shell.ActualHeight),
-            Current(window.Height, window.ActualHeight),
-            window.Left);
-        var stopwatch = Stopwatch.StartNew();
-
-        void RenderFrame(object? sender, EventArgs e)
-        {
-            var progress = Math.Clamp(stopwatch.Elapsed.TotalMilliseconds / MotionDuration.TotalMilliseconds, 0, 1);
-            var eased = EaseOut(progress);
-            ApplyShellGeometry(window, shell, Lerp(start, geometry, eased));
-            if (progress < 1)
-            {
-                return;
-            }
-
-            CompositionTarget.Rendering -= RenderFrame;
-            _stopShellAnimation = null;
-        }
-
-        _stopShellAnimation = () =>
-        {
-            CompositionTarget.Rendering -= RenderFrame;
-            _stopShellAnimation = null;
-        };
-        CompositionTarget.Rendering += RenderFrame;
+        Animate(window, Window.WidthProperty, geometry.Width, frameRate);
+        Animate(window, Window.HeightProperty, geometry.WindowHeight, frameRate);
+        Animate(window, Window.LeftProperty, geometry.Left, frameRate);
+        Animate(shell, FrameworkElement.WidthProperty, geometry.Width, frameRate);
+        Animate(shell, FrameworkElement.HeightProperty, geometry.ShellHeight, frameRate);
     }
 
     public static void Clear(Window window, FrameworkElement shell, FrameworkElement detail)
     {
-        _stopShellAnimation?.Invoke();
         var current = new ShellGeometry(
             Current(window.Width, window.ActualWidth),
             Current(shell.Height, shell.ActualHeight),
@@ -89,21 +62,6 @@ public static class ShellAnimator
         detail.BeginAnimation(UIElement.OpacityProperty, null);
         ApplyShellGeometry(window, shell, current);
     }
-
-    public static double EaseOut(double progress)
-    {
-        var clamped = Math.Clamp(progress, 0, 1);
-        return 1 - Math.Pow(1 - clamped, 4);
-    }
-
-    private static ShellGeometry Lerp(ShellGeometry start, ShellGeometry end, double progress) => new(
-        Lerp(start.Width, end.Width, progress),
-        Lerp(start.ShellHeight, end.ShellHeight, progress),
-        Lerp(start.WindowHeight, end.WindowHeight, progress),
-        Lerp(start.Left, end.Left, progress));
-
-    private static double Lerp(double start, double end, double progress) =>
-        start + ((end - start) * progress);
 
     private static double Current(double propertyValue, double actualValue) =>
         actualValue > 0 ? actualValue : propertyValue;
