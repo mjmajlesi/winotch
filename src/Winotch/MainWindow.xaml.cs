@@ -75,11 +75,15 @@ public partial class MainWindow : Window
         {
             UpdateClock();
             RefreshFocusTimer();
+            var now = DateTimeOffset.UtcNow;
+            ApplyCalendarUi(now);
+            ShowCalendarToastIfDue(now);
         };
         _statusTimer.Tick += async (_, _) => await RefreshStatusAsync();
         _shellTimer.Tick += (_, _) => ApplyShellMode(ForegroundWindowService.DetectShellMode(), animate: false);
         _collapseTimer.Tick += (_, _) => CollapseAfterPointerExit();
         _statsTimer.Tick += (_, _) => RefreshSystemStats();
+        _calendarTimer.Tick += async (_, _) => await RefreshCalendarAsync();
         _notifications.NotificationsChanged += (_, _) => Dispatcher.Invoke(async () => await RefreshStatusAsync());
         _media.MediaChanged += (_, _) => Dispatcher.Invoke(async () => await RefreshStatusAsync());
         _clipboardHistory.HistoryChanged += OnClipboardHistoryChanged;
@@ -96,6 +100,7 @@ public partial class MainWindow : Window
         SyncStartupSetting();
         ApplyShellMode(ForegroundWindowService.DetectShellMode(), animate: false);
         LoadFocusTimer();
+        ApplyCalendarSettings(_settings.Current);
         UpdateClock();
         RefreshFocusTimer();
         _clockTimer.Start();
@@ -105,6 +110,7 @@ public partial class MainWindow : Window
         RefreshClipboardPanel();
         await ApplyAccountPictureAsync();
         await LoadFileShelfAsync();
+        await RefreshCalendarAsync();
         await RefreshStatusAsync();
     }
 
@@ -174,6 +180,7 @@ public partial class MainWindow : Window
         FocusLiveRemainingText.Text = snapshot.RemainingText;
         FocusLiveProgressFill.Width = FocusLiveProgressWidth * snapshot.Progress;
         FocusAutoCycleCheckBox.IsChecked = snapshot.AutoCycle;
+        RefreshCalendarLiveStatus(now);
     }
 
     private void ShowLatestFocusCompletion(IReadOnlyList<FocusTimerCompletion> completions)
@@ -290,6 +297,7 @@ public partial class MainWindow : Window
             _clockTimer.Stop();
             _statusTimer.Stop();
             _shellTimer.Stop();
+            _calendarTimer.Stop();
             _collapseTimer.Stop();
             StopSystemStats();
             _expandedReveal?.Cancel();
@@ -308,6 +316,7 @@ public partial class MainWindow : Window
         ApplyShellMode(ForegroundWindowService.DetectShellMode(), animate: false);
         UpdateClock();
         RefreshFocusTimer();
+        ApplyCalendarSettings(_settings.Current);
         _clockTimer.Start();
         _statusTimer.Start();
         _shellTimer.Start();
@@ -1095,6 +1104,7 @@ public partial class MainWindow : Window
         Dispatcher.Invoke(() =>
         {
             UpdateClock();
+            ApplyCalendarSettings(settings);
             if (!_expanded || !settings.General.ShowDate)
             {
                 ShellAnimator.Hide(DateText);
@@ -1149,6 +1159,8 @@ public partial class MainWindow : Window
         _appBar.Dispose();
         _notifications.Dispose();
         _clipboardHistory.Dispose();
+        _calendarTimer.Stop();
+        _calendarRefresh.Dispose();
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         base.OnClosed(e);
