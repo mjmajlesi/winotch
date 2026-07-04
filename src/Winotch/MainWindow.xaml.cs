@@ -567,8 +567,8 @@ public partial class MainWindow : Window
         NotchShell.CornerRadius = new CornerRadius(0, 0, 34, 34);
         ShellAnimator.Clear(this, NotchShell, DetailPanel);
         DetailPanel.Opacity = 0;
-        var monitor = CurrentMonitor();
-        ShellAnimator.AnimateShell(this, NotchShell, PlaceOnMonitor(ShellMetrics.Expanded(monitor.WidthDip), monitor), _animationFrameRate);
+        var monitor = CurrentMonitor(preferCursor: true);
+        ShellAnimator.AnimateShell(this, NotchShell, ShellMetrics.PlaceOnMonitor(ShellMetrics.Expanded(monitor.WidthDip), monitor), _animationFrameRate);
         StartSystemStats();
         _ = RefreshControlCenterAsync();
         _expandedReveal = new CancellationTokenSource();
@@ -774,7 +774,7 @@ public partial class MainWindow : Window
         NotchShell.CornerRadius = new CornerRadius(0, 0, 24, 24);
         ShellAnimator.Clear(this, NotchShell, DetailPanel);
         var monitor = CurrentMonitor();
-        ShellAnimator.AnimateShell(this, NotchShell, PlaceOnMonitor(ShellMetrics.MediaToast(monitor.WidthDip), monitor), _animationFrameRate);
+        ShellAnimator.AnimateShell(this, NotchShell, ShellMetrics.PlaceOnMonitor(ShellMetrics.MediaToast(monitor.WidthDip), monitor), _animationFrameRate);
         panel.Opacity = 0;
         ShellAnimator.Show(panel, _animationFrameRate);
         _ = HideCompactToastAfterDelayAsync(_compactToastHide.Token);
@@ -876,7 +876,7 @@ public partial class MainWindow : Window
         _currentShellMode = mode;
         var isFullBar = mode == ShellMode.FullBar;
         var monitor = CurrentMonitor();
-        var geometry = PlaceOnMonitor(ShellMetrics.ForMode(isFullBar, monitor.WidthDip), monitor);
+        var geometry = ShellMetrics.PlaceOnMonitor(ShellMetrics.ForMode(isFullBar, monitor.WidthDip), monitor);
 
         ShellAnimator.Hide(DateText);
         ClockGroup.Visibility = Visibility.Visible;
@@ -969,27 +969,24 @@ public partial class MainWindow : Window
         ApplyShellMode(foreground.Mode, animate);
     }
 
-    private MonitorSnapshot CurrentMonitor()
+    private MonitorSnapshot CurrentMonitor(bool preferCursor = false)
     {
-        if (_currentMonitor is MonitorSnapshot monitor)
+        if (!preferCursor && _currentMonitor is MonitorSnapshot monitor)
         {
             return monitor;
         }
 
         var monitors = MonitorTargeting.CaptureScreens();
-        var primary = MonitorTargeting.SelectMonitor(
+        var selected = MonitorTargeting.SelectMonitor(
             monitors,
             new MonitorTargetRequest(
                 ForegroundRect: null,
-                UseCursorMonitor: false,
+                UseCursorMonitor: preferCursor,
                 MonitorTargeting.GetCursorPosition(),
-                LastMonitorDeviceName: null));
-        _currentMonitor = primary;
-        return primary;
+                _currentMonitor?.DeviceName));
+        _currentMonitor = selected;
+        return selected;
     }
-
-    private static ShellGeometry PlaceOnMonitor(ShellGeometry geometry, MonitorSnapshot monitor) =>
-        geometry with { Left = monitor.LeftDip + geometry.Left, Top = monitor.TopDip };
 
     private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
