@@ -100,11 +100,7 @@ public class MonitorTargetingTests
             DpiScaleX: 1.5,
             DpiScaleY: 1.5);
 
-        var geometry = ShellMetrics.ForMode(isFullBar: false, monitor.WidthDip) with
-        {
-            Left = monitor.LeftDip + ShellMetrics.CenterLeft(monitor.WidthDip, ShellMetrics.MiniWidth),
-            Top = monitor.TopDip
-        };
+        var geometry = ShellMetrics.PlaceOnMonitor(ShellMetrics.ForMode(isFullBar: false, monitor.WidthDip), monitor);
 
         Assert.Equal(853.33, monitor.LeftDip, precision: 2);
         Assert.Equal(853.33, monitor.WidthDip, precision: 2);
@@ -113,6 +109,24 @@ public class MonitorTargetingTests
         Assert.Equal(1.5, monitor.DpiScaleY);
         Assert.Equal(1158, geometry.Left, precision: 2);
         Assert.Equal(0, geometry.Top);
+    }
+
+    [Fact]
+    public void PlaceOnMonitorKeepsExpandedShellInsideTargetMonitor()
+    {
+        var monitor = new MonitorSnapshot(
+            "target",
+            new NativeRect(0, 0, 1365, 768),
+            new NativeRect(0, 0, 1365, 728),
+            IsPrimary: true,
+            DpiScaleX: 1,
+            DpiScaleY: 1);
+        var geometryFromWiderScreen = ShellMetrics.Expanded(1920);
+
+        var placed = ShellMetrics.PlaceOnMonitor(geometryFromWiderScreen, monitor);
+
+        Assert.Equal(385, placed.Left);
+        Assert.True(placed.Left + placed.Width <= monitor.LeftDip + monitor.WidthDip);
     }
 
     [Fact]

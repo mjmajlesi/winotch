@@ -49,6 +49,14 @@ public static class ShellMetrics
         return new ShellGeometry(width, MediaToastShellHeight, MediaToastWindowHeight, CenterLeft(screenWidth, width));
     }
 
+    public static ShellGeometry PlaceOnMonitor(ShellGeometry geometry, MonitorSnapshot monitor)
+    {
+        var left = monitor.LeftDip + geometry.Left;
+        var minLeft = monitor.LeftDip;
+        var maxLeft = monitor.LeftDip + Math.Max(0, monitor.WidthDip - geometry.Width);
+        return geometry with { Left = Math.Clamp(left, minLeft, maxLeft), Top = monitor.TopDip };
+    }
+
     private static double FitWidth(double width, double screenWidth) =>
         Math.Max(0, Math.Min(width, screenWidth));
 }
