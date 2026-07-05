@@ -58,7 +58,7 @@
                                          Width="24"
                                          Height="24"
                                          HorizontalAlignment="Left"
-                                         Margin="3"
+                                         Margin="2"
                                          Fill="{StaticResource NotchText}"
                                          RenderTransformOrigin="0.5,0.5">
                                     <Ellipse.RenderTransform>

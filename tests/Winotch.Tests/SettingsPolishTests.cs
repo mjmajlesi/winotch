@@ -17,6 +17,15 @@ public class SettingsPolishTests
         Assert.Contains(toggleStyle.Descendants(ui + "Setter"), setter =>
             (string?)setter.Attribute("Property") == "MinHeight" &&
             (string?)setter.Attribute("Value") == "38");
+        var xamlName = XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml");
+        var track = toggleStyle.Descendants(ui + "Border").Single(border => (string?)border.Attribute(xamlName) == "SwitchTrack");
+        var thumb = toggleStyle.Descendants(ui + "Ellipse").Single(ellipse => (string?)ellipse.Attribute(xamlName) == "SwitchThumb");
+        var trackHeight = double.Parse((string?)track.Attribute("Height") ?? "0");
+        var borderThickness = double.Parse((string?)track.Attribute("BorderThickness") ?? "0");
+        var thumbHeight = double.Parse((string?)thumb.Attribute("Height") ?? "0");
+        var thumbMargin = double.Parse((string?)thumb.Attribute("Margin") ?? "0");
+
+        Assert.True(thumbHeight + (thumbMargin * 2) <= trackHeight - (borderThickness * 2));
         Assert.Contains("AutomationProperties.Name=\"Toast duration scale\"", xaml);
         Assert.Contains("AutomationProperties.Name=\"ICS subscription URLs\"", xaml);
         Assert.Contains("AutomationProperties.Name=\"Request notification access\"", xaml);
