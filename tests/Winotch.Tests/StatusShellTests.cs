@@ -266,7 +266,7 @@ public class StatusShellTests
 
         var snapshot = await service.ReadAsync();
 
-        Assert.Equal("Live Windows toast watcher", snapshot.Status);
+        Assert.Equal("Live toasts", snapshot.Status);
         var item = Assert.Single(snapshot.Items);
         Assert.Equal("Fresh", item.App);
     }

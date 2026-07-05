@@ -127,52 +127,47 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="DetailPanel" Grid.Row="1" Opacity="0" Margin="0,10,0,0" ClipToBounds="True">
-                    <ScrollViewer x:Name="DetailScrollViewer"
-                                  VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  PanningMode="VerticalOnly">
-                        <Grid Width="{Binding ViewportWidth, ElementName=DetailScrollViewer}" ClipToBounds="True">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="260" />
-                                <ColumnDefinition Width="360" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                <Grid x:Name="DetailPanel" Grid.Row="1" Opacity="0" Margin="0,12,0,0" ClipToBounds="True">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="260" />
+                        <ColumnDefinition Width="360" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                    <StackPanel Margin="2,0,22,0">
+                    <StackPanel Margin="0,0,24,0">
                         <TextBlock Text="System" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" />
-                        <TextBlock x:Name="LargeTimeText" FontSize="38" FontWeight="Light" Margin="0,4,0,0" />
+                        <TextBlock x:Name="LargeTimeText" FontSize="38" FontWeight="Light" Margin="0,8,0,0" />
                         <TextBlock x:Name="LargeDateText" FontSize="14" Foreground="{StaticResource NotchMutedText}" />
                         <ProgressBar x:Name="BatteryBar" Style="{StaticResource ModernProgressBar}" Margin="0,16,0,8" Maximum="100" />
                         <TextBlock x:Name="BatteryDetailText" FontSize="12" Foreground="{StaticResource NotchMutedText}" />
                         <StackPanel x:Name="SystemStatsSection" Margin="0,16,0,0" Visibility="Collapsed" SnapsToDevicePixels="True">
                             <TextBlock Text="Stats" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" />
-                            <Grid x:Name="StatsCpuRow" Height="23" Margin="0,7,0,0" Visibility="Collapsed">
+                            <Grid x:Name="StatsCpuRow" Height="24" Margin="0,8,0,0" Visibility="Collapsed">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="32" />
+                                    <ColumnDefinition Width="48" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="CPU" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" VerticalAlignment="Center" />
-                                <TextBlock x:Name="StatsCpuValueText" Grid.Column="1" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" />
+                                <TextBlock x:Name="StatsCpuValueText" Grid.Column="1" FontSize="11" TextAlignment="Right" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" />
                             </Grid>
-                            <Grid x:Name="StatsRamRow" Height="23" Margin="0,4,0,0" Visibility="Collapsed">
+                            <Grid x:Name="StatsRamRow" Height="24" Margin="0,4,0,0" Visibility="Collapsed">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="32" />
+                                    <ColumnDefinition Width="48" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="RAM" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" VerticalAlignment="Center" />
-                                <TextBlock x:Name="StatsRamValueText" Grid.Column="1" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" />
+                                <TextBlock x:Name="StatsRamValueText" Grid.Column="1" FontSize="11" TextAlignment="Right" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" />
                             </Grid>
-                            <Grid x:Name="StatsNetRow" Height="23" Margin="0,4,0,0" Visibility="Collapsed">
+                            <Grid x:Name="StatsNetRow" Height="24" Margin="0,4,0,0" Visibility="Collapsed">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="32" />
+                                    <ColumnDefinition Width="48" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="Net" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" VerticalAlignment="Center" />
-                                <TextBlock x:Name="StatsNetValueText" Grid.Column="1" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" />
+                                <TextBlock x:Name="StatsNetValueText" Grid.Column="1" FontSize="11" TextAlignment="Right" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" />
                             </Grid>
                         </StackPanel>
-                        <StackPanel x:Name="AgendaPanel" Margin="0,18,0,0">
+                        <StackPanel x:Name="AgendaPanel" Margin="0,16,0,0">
                             <TextBlock Text="Agenda" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" />
                             <TextBlock x:Name="AgendaUpdatedText" FontSize="11" Foreground="{StaticResource NotchMutedText}" Margin="0,3,0,7" />
                             <TextBlock x:Name="AgendaEmptyText"
@@ -222,7 +217,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </StackPanel>
-                        <local:ClipboardHistoryPanel x:Name="ClipboardPanel" Margin="0,18,0,0" />
+                        <local:ClipboardHistoryPanel x:Name="ClipboardPanel" Margin="0,16,0,0" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Margin="0,0,0,0" ClipToBounds="True">
@@ -262,7 +257,7 @@
                         <TextBlock Text="Notifications" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" />
                         <TextBlock x:Name="NotificationStateText" FontSize="12" Foreground="{StaticResource NotchMutedText}" Margin="0,4,0,8" />
                         <ListBox x:Name="NotificationList"
-                                 Height="118"
+                                  Height="118"
                                  BorderThickness="0"
                                  Background="Transparent"
                                  Foreground="{StaticResource NotchText}"
@@ -274,6 +269,8 @@
                                     <TextBlock Text="{Binding}"
                                                FontSize="12"
                                                LineHeight="17"
+                                               MaxHeight="85"
+                                               ClipToBounds="True"
                                                TextWrapping="Wrap"
                                                TextTrimming="CharacterEllipsis" />
                                 </DataTemplate>
@@ -326,7 +323,7 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <ScrollViewer Grid.Column="1" Margin="0,0,22,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ScrollViewer Grid.Column="1" Margin="0,0,24,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel>
                             <DockPanel>
                                 <TextBlock Text="Controls" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" VerticalAlignment="Center" />
@@ -480,8 +477,6 @@
                                      ItemContainerStyle="{StaticResource NotchListBoxItem}" />
                             <Button x:Name="ConnectWifiButton" Content="Connect" HorizontalAlignment="Left" Margin="0,8,0,0" Click="ConnectWifi_Click" />
                         </StackPanel>
-                    </ScrollViewer>
-                        </Grid>
                     </ScrollViewer>
                 </Grid>
 

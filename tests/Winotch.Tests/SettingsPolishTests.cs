@@ -61,6 +61,62 @@ public class SettingsPolishTests
         Assert.Contains("NotificationService.RequestHistoryAccessAsync", architecture);
     }
 
+    [Fact]
+    public void ExpandedPanelKeepsScrollingLocalAndNotificationBodiesClamped()
+    {
+        var xaml = ReadRepoFile("src", "Winotch", "MainWindow.xaml");
+        var doc = XDocument.Parse(xaml);
+        XNamespace ui = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        var xamlName = XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml");
+
+        Assert.DoesNotContain(doc.Descendants(ui + "ScrollViewer"),
+            element => (string?)element.Attribute(xamlName) == "DetailScrollViewer");
+
+        var notificationList = doc.Descendants(ui + "ListBox")
+            .Single(element => (string?)element.Attribute(xamlName) == "NotificationList");
+        Assert.Equal("Auto", (string?)notificationList.Attribute("ScrollViewer.VerticalScrollBarVisibility"));
+
+        var notificationText = notificationList.Descendants(ui + "TextBlock")
+            .Single(element => (string?)element.Attribute("Text") == "{Binding}");
+        Assert.Equal("85", (string?)notificationText.Attribute("MaxHeight"));
+        Assert.Equal("True", (string?)notificationText.Attribute("ClipToBounds"));
+    }
+
+    [Fact]
+    public void ExpandedPanelUsesAlignedStatsRows()
+    {
+        var xaml = ReadRepoFile("src", "Winotch", "MainWindow.xaml");
+        var doc = XDocument.Parse(xaml);
+        XNamespace ui = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        var xamlName = XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml");
+
+        foreach (var rowName in new[] { "StatsCpuRow", "StatsRamRow", "StatsNetRow" })
+        {
+            var row = doc.Descendants(ui + "Grid")
+                .Single(element => (string?)element.Attribute(xamlName) == rowName);
+            var columns = row.Descendants(ui + "ColumnDefinition").ToArray();
+
+            Assert.Equal("48", (string?)columns[0].Attribute("Width"));
+            Assert.Equal("*", (string?)columns[1].Attribute("Width"));
+            Assert.Contains(row.Descendants(ui + "TextBlock"), text =>
+                (string?)text.Attribute("Grid.Column") == "1" &&
+                (string?)text.Attribute("TextAlignment") == "Right");
+        }
+    }
+
+    [Fact]
+    public void ExpandedPanelStatusCopyStaysShort()
+    {
+        var mainWindow = ReadRepoFile("src", "Winotch", "MainWindow.xaml.cs");
+        var notifications = ReadRepoFile("src", "Winotch", "NotificationService.cs");
+
+        Assert.Contains("\"Connected. Location needed to scan Wi-Fi.\"", mainWindow);
+        Assert.DoesNotContain("Scan needs Windows Location permission", mainWindow);
+        Assert.DoesNotContain("Notification listener is not available", notifications);
+        Assert.DoesNotContain("Notification access unavailable:", notifications);
+        Assert.Contains("\"Notification access unavailable.\"", notifications);
+    }
+
     private static string ReadRepoFile(params string[] parts) =>
         File.ReadAllText(Path.Combine(FindRepoRoot(), Path.Combine(parts)));
 

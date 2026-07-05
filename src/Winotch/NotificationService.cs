@@ -42,12 +42,12 @@ public sealed class NotificationService : IDisposable
         var liveToasts = GetLiveToasts();
         if (liveToasts.Count > 0)
         {
-            return new NotificationSnapshot("Live Windows toast watcher", liveToasts);
+            return new NotificationSnapshot("Live toasts", liveToasts);
         }
 
         if (!ApiInformation.IsTypePresent("Windows.UI.Notifications.Management.UserNotificationListener"))
         {
-            return new NotificationSnapshot("Notification listener is not available on this Windows build.", []);
+            return new NotificationSnapshot("Notification history unavailable.", []);
         }
 
         try
@@ -71,19 +71,19 @@ public sealed class NotificationService : IDisposable
             }
 
             var status = items.Count == 0 && _watchingLiveToasts
-                ? "Watching for live toast pop-ups"
+                ? "Watching live toasts"
                 : "Windows notifications";
             return new NotificationSnapshot(items.Count == 0 ? status : "Windows notifications", items);
         }
         catch (Exception ex) when (ex is NotImplementedException || (uint)ex.HResult == 0x80004001)
         {
             return new NotificationSnapshot(_watchingLiveToasts
-                ? "Watching live toasts; packaged capability needed for history."
-                : "Notification access needs packaged Windows capability.", []);
+                ? "Live toasts only; history needs packaging."
+                : "Notification history needs packaging.", []);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return new NotificationSnapshot($"Notification access unavailable: {ex.Message}", []);
+            return new NotificationSnapshot("Notification access unavailable.", []);
         }
     }
 
@@ -124,8 +124,8 @@ public sealed class NotificationService : IDisposable
 
     private static string HistoryAccessStatus(UserNotificationListenerAccessStatus access) =>
         access == UserNotificationListenerAccessStatus.Unspecified
-            ? "Notification history access has not been requested."
-            : "Allow notification access in Windows Settings.";
+            ? "Request notification access in Settings."
+            : "Allow notifications in Windows Settings.";
 
     private async void OnWindowOpened(object sender, AutomationEventArgs e)
     {

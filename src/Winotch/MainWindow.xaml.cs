@@ -252,9 +252,9 @@ public partial class MainWindow : Window
         WifiList.Visibility = usingConnectedFallback || networks.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         ConnectWifiButton.Visibility = usingConnectedFallback || networks.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         WifiStateText.Text = wifi.Name is null
-            ? "No connected Wi-Fi"
+            ? "Wi-Fi offline"
             : usingConnectedFallback
-                ? $"{wifi.Name} connected. Scan needs Windows Location permission."
+                ? "Connected. Location needed to scan Wi-Fi."
                 : $"Connected to {wifi.Name}";
         var priorityStatus = _priorityStatus.Read(battery, wifi);
         ApplyMicState(priorityStatus.MicrophoneActive, _audio.GetCaptureMuted());
@@ -1140,7 +1140,7 @@ public partial class MainWindow : Window
     {
         if (WifiList.SelectedItem is not WifiNetwork network)
         {
-            WifiStateText.Text = "Select a saved Wi-Fi profile first.";
+            WifiStateText.Text = "Select a saved Wi-Fi profile.";
             return;
         }
 
