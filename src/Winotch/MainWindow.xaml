@@ -358,8 +358,8 @@
                                     <ItemsControl x:Name="OutputDeviceList" Margin="0,8,0,8">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Button Padding="8,5" Margin="0,0,0,5" Click="OutputDevice_Click" ToolTip="{Binding Name}">
-                                                    <Grid>
+                                                <Button Padding="8,5" Margin="0,0,0,5" HorizontalContentAlignment="Stretch" Click="OutputDevice_Click" ToolTip="{Binding Name}">
+                                                    <Grid HorizontalAlignment="Stretch">
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="20" />
                                                             <ColumnDefinition Width="*" />
@@ -469,15 +469,13 @@
                                     <ItemsControl x:Name="BrightnessList" Margin="0,5,0,0">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Height="31" Margin="0,0,0,5">
+                                                <Grid Height="31" Margin="0,0,0,5" ToolTip="{Binding Name}">
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="24" />
-                                                        <ColumnDefinition Width="72" />
+                                                        <ColumnDefinition Width="32" />
                                                         <ColumnDefinition Width="*" />
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Style="{StaticResource IconText}" Text="&#xE706;" FontSize="13" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" ToolTip="{Binding Name}" FontSize="12" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                                                    <Slider Grid.Column="2" Style="{StaticResource ModernSlider}" Minimum="0" Maximum="100" Value="{Binding Percent}" ValueChanged="BrightnessSlider_ValueChanged" />
+                                                    <Slider Grid.Column="1" Style="{StaticResource ModernSlider}" AutomationProperties.Name="{Binding Name}" Minimum="0" Maximum="100" Value="{Binding Percent}" ValueChanged="BrightnessSlider_ValueChanged" />
                                                 </Grid>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>

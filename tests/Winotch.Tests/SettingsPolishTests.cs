@@ -111,7 +111,9 @@ public class SettingsPolishTests
     public void ExpandedControlsUseCompactNativeSections()
     {
         var xaml = ReadRepoFile("src", "Winotch", "MainWindow.xaml");
+        var appXaml = ReadRepoFile("src", "Winotch", "App.xaml");
         var doc = XDocument.Parse(xaml);
+        var appDoc = XDocument.Parse(appXaml);
         XNamespace ui = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
         var xamlName = XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml");
 
@@ -128,7 +130,18 @@ public class SettingsPolishTests
         Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "VolumeSlider");
         Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "AudioSessionMixerSection");
         Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "MicMuteButton");
+        Assert.Contains(audioSection.Descendants(ui + "Button"), button =>
+            (string?)button.Attribute("Click") == "OutputDevice_Click" &&
+            (string?)button.Attribute("HorizontalContentAlignment") == "Stretch");
+        Assert.Contains(appDoc.Descendants(ui + "ContentPresenter"), presenter =>
+            (string?)presenter.Attribute("HorizontalAlignment") == "{TemplateBinding HorizontalContentAlignment}" &&
+            (string?)presenter.Attribute("VerticalAlignment") == "{TemplateBinding VerticalContentAlignment}");
         Assert.Contains(brightnessSection.Descendants(), element => (string?)element.Attribute(xamlName) == "BrightnessList");
+        Assert.DoesNotContain(brightnessSection.Descendants(ui + "TextBlock"), text =>
+            (string?)text.Attribute("Text") == "{Binding Name}");
+        Assert.Contains(brightnessSection.Descendants(ui + "Slider"), slider =>
+            (string?)slider.Attribute("AutomationProperties.Name") == "{Binding Name}" &&
+            (string?)slider.Attribute("ValueChanged") == "BrightnessSlider_ValueChanged");
         Assert.Contains(wifiSection.Descendants(), element => (string?)element.Attribute(xamlName) == "WifiList");
         Assert.Contains(wifiSection.Descendants(), element => (string?)element.Attribute(xamlName) == "ConnectWifiButton");
     }

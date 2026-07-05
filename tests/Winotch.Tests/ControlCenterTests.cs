@@ -67,6 +67,16 @@ public class ControlCenterTests
     }
 
     [Fact]
+    public void WmiBrightnessMatchesRawDisplayInstanceNames()
+    {
+        const string instanceName = @"DISPLAY\CSO1606\5&c1a3f22&0&UID4357_0";
+
+        Assert.True(WmiBrightness.IsTargetInstance($"wmi:{instanceName}", instanceName));
+        Assert.False(WmiBrightness.IsTargetInstance($"wmi:{instanceName}", @"DISPLAY\OTHER\0"));
+        Assert.False(WmiBrightness.IsTargetInstance("ddc:0", instanceName));
+    }
+
+    [Fact]
     public async Task BrightnessWriterDebouncesRepeatedWritesPerDisplay()
     {
         var delays = new Queue<TaskCompletionSource>();

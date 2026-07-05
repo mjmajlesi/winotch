@@ -997,7 +997,9 @@ public class StatusShellTests
             try
             {
                 ShellAnimator.Show(target, 60);
-                PumpDispatcher(TimeSpan.FromMilliseconds(ShellAnimationTiming.FadeMilliseconds / 2));
+                PumpUntil(
+                    () => target.Opacity is > 0.05 and < 0.95,
+                    TimeSpan.FromMilliseconds(ShellAnimationTiming.FadeMilliseconds + 250));
                 var showingOpacity = target.Opacity;
                 Assert.InRange(showingOpacity, 0.05, 0.95);
 
@@ -1006,7 +1008,9 @@ public class StatusShellTests
                 Assert.InRange(hideBaseOpacity, 0.05, 0.95);
                 Assert.True(Math.Abs(showingOpacity - hideBaseOpacity) < 0.05);
 
-                PumpDispatcher(TimeSpan.FromMilliseconds(ShellAnimationTiming.FadeMilliseconds / 2));
+                PumpUntil(
+                    () => target.Opacity >= 0 && target.Opacity < hideBaseOpacity,
+                    TimeSpan.FromMilliseconds(ShellAnimationTiming.FadeMilliseconds + 250));
                 var hidingOpacity = target.Opacity;
                 Assert.InRange(hidingOpacity, 0, hideBaseOpacity);
 
@@ -1070,6 +1074,15 @@ public class StatusShellTests
         };
         timer.Start();
         Dispatcher.PushFrame(frame);
+    }
+
+    private static void PumpUntil(Func<bool> condition, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (!condition() && DateTime.UtcNow < deadline)
+        {
+            PumpDispatcher(TimeSpan.FromMilliseconds(8));
+        }
     }
 
     private static PriorityStatusSnapshot Status(

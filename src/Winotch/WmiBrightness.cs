@@ -54,12 +54,17 @@ internal static class WmiBrightness
         {
             using var searcher = new ManagementObjectSearcher(
                 "root\\wmi",
-                $"SELECT * FROM WmiMonitorBrightnessMethods WHERE InstanceName = '{EscapeWql(instanceName)}'");
+                "SELECT * FROM WmiMonitorBrightnessMethods");
             using var results = searcher.Get();
             foreach (ManagementObject methods in results)
             {
                 using (methods)
                 {
+                    if (!IsTargetInstance(id, methods["InstanceName"]?.ToString()))
+                    {
+                        continue;
+                    }
+
                     methods.InvokeMethod("WmiSetBrightness", [1u, (byte)Math.Clamp(percent, 0, 100)]);
                     return;
                 }
@@ -73,5 +78,10 @@ internal static class WmiBrightness
     private static string StripPrefix(string value) =>
         value.StartsWith(Prefix, StringComparison.Ordinal) ? value[Prefix.Length..] : "";
 
-    private static string EscapeWql(string value) => value.Replace("'", "''", StringComparison.Ordinal);
+    internal static bool IsTargetInstance(string id, string? instanceName)
+    {
+        var target = StripPrefix(id);
+        return !string.IsNullOrWhiteSpace(target) &&
+            string.Equals(target, instanceName, StringComparison.Ordinal);
+    }
 }
