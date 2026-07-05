@@ -76,10 +76,13 @@ public class SettingsPolishTests
             .Single(element => (string?)element.Attribute(xamlName) == "NotificationList");
         Assert.Equal("Auto", (string?)notificationList.Attribute("ScrollViewer.VerticalScrollBarVisibility"));
 
-        var notificationText = notificationList.Descendants(ui + "TextBlock")
-            .Single(element => (string?)element.Attribute("Text") == "{Binding}");
-        Assert.Equal("85", (string?)notificationText.Attribute("MaxHeight"));
-        Assert.Equal("True", (string?)notificationText.Attribute("ClipToBounds"));
+        var notificationItem = notificationList.Descendants(ui + "StackPanel")
+            .Single(element => (string?)element.Attribute("MaxHeight") == "85");
+        var notificationBody = notificationList.Descendants(ui + "TextBlock")
+            .Single(element => (string?)element.Attribute("Text") == "{Binding Body}");
+        Assert.Equal("True", (string?)notificationItem.Attribute("ClipToBounds"));
+        Assert.Equal("48", (string?)notificationBody.Attribute("MaxHeight"));
+        Assert.Equal("True", (string?)notificationBody.Attribute("ClipToBounds"));
     }
 
     [Fact]

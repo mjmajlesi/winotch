@@ -531,8 +531,31 @@ public class StatusShellTests
             []);
 
         Assert.Equal("Mail: Subject Body text", item.ToString());
+        Assert.Equal("Mail", item.App);
+        Assert.Equal("Subject", item.Title);
+        Assert.Equal("Body text", item.Body);
         Assert.Equal("M", item.BadgeText);
         Assert.EndsWith("M", item.TimeText);
+    }
+
+    [Fact]
+    public void ExpandedNotificationTemplateBindsAppTitleBodyAndClampsBody()
+    {
+        var path = Path.GetFullPath(@"..\..\..\..\..\src\Winotch\MainWindow.xaml", AppContext.BaseDirectory);
+        var xaml = XDocument.Load(path);
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+        var list = xaml.Descendants()
+            .Single(element => (string?)element.Attribute(x + "Name") == "NotificationList");
+        var textBlocks = list.Descendants()
+            .Where(element => element.Name.LocalName == "TextBlock")
+            .ToArray();
+
+        Assert.Contains(textBlocks, element => (string?)element.Attribute("Text") == "{Binding App}");
+        Assert.Contains(textBlocks, element => (string?)element.Attribute("Text") == "{Binding Title}");
+        var body = Assert.Single(textBlocks, element => (string?)element.Attribute("Text") == "{Binding Body}");
+        Assert.Equal("48", (string?)body.Attribute("MaxHeight"));
+        Assert.Equal("True", (string?)body.Attribute("ClipToBounds"));
+        Assert.Equal("Wrap", (string?)body.Attribute("TextWrapping"));
     }
 
     [Fact]

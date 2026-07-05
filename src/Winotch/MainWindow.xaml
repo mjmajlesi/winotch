@@ -265,14 +265,27 @@
                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                                  ItemContainerStyle="{StaticResource NotchListBoxItem}">
                             <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding}"
-                                               FontSize="12"
-                                               LineHeight="17"
-                                               MaxHeight="85"
-                                               ClipToBounds="True"
-                                               TextWrapping="Wrap"
-                                               TextTrimming="CharacterEllipsis" />
+                                <DataTemplate DataType="{x:Type local:NotificationItem}">
+                                    <StackPanel MaxHeight="85" ClipToBounds="True">
+                                        <TextBlock Text="{Binding App}"
+                                                   FontSize="10"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource NotchMutedText}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,1,0,0" />
+                                        <TextBlock Text="{Binding Body}"
+                                                   FontSize="11"
+                                                   LineHeight="16"
+                                                   MaxHeight="48"
+                                                   ClipToBounds="True"
+                                                   TextWrapping="Wrap"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,1,0,0" />
+                                    </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
