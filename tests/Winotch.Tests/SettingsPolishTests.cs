@@ -105,6 +105,32 @@ public class SettingsPolishTests
     }
 
     [Fact]
+    public void ExpandedControlsUseCompactNativeSections()
+    {
+        var xaml = ReadRepoFile("src", "Winotch", "MainWindow.xaml");
+        var doc = XDocument.Parse(xaml);
+        XNamespace ui = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        var xamlName = XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml");
+
+        var audioSection = doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "AudioControlsSection");
+        var brightnessSection = doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "BrightnessBlock");
+        var wifiSection = doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "WifiControlsSection");
+
+        Assert.Equal("12", (string?)audioSection.Attribute("Padding"));
+        Assert.Equal("8", (string?)audioSection.Attribute("CornerRadius"));
+        Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "OutputDeviceList");
+        Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "VolumeSlider");
+        Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "AudioSessionMixerSection");
+        Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "MicMuteButton");
+        Assert.Contains(brightnessSection.Descendants(), element => (string?)element.Attribute(xamlName) == "BrightnessList");
+        Assert.Contains(wifiSection.Descendants(), element => (string?)element.Attribute(xamlName) == "WifiList");
+        Assert.Contains(wifiSection.Descendants(), element => (string?)element.Attribute(xamlName) == "ConnectWifiButton");
+    }
+
+    [Fact]
     public void ExpandedPanelStatusCopyStaysShort()
     {
         var mainWindow = ReadRepoFile("src", "Winotch", "MainWindow.xaml.cs");
