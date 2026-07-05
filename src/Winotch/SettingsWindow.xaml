@@ -5,6 +5,7 @@
         Title="Winotch Settings"
         Width="560"
         Height="700"
+        Icon="Resources/WinotchTray.ico"
         MinWidth="520"
         MinHeight="620"
         WindowStartupLocation="CenterScreen"

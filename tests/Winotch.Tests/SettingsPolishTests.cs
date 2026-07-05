@@ -31,7 +31,20 @@ public class SettingsPolishTests
         Assert.Contains("AutomationProperties.Name=\"Request notification access\"", xaml);
         Assert.Contains("AutomationProperties.LiveSetting=\"Polite\"", xaml);
         Assert.Contains("Click=\"RequestNotificationAccessClick\"", xaml);
+        Assert.Contains("Icon=\"Resources/WinotchTray.ico\"", xaml);
         Assert.DoesNotContain("DropShadowEffect", xaml);
+    }
+
+    [Fact]
+    public void SettingsWindowIconUsesIncludedTrayAsset()
+    {
+        var xaml = XDocument.Parse(ReadRepoFile("src", "Winotch", "SettingsWindow.xaml"));
+        var project = XDocument.Parse(ReadRepoFile("src", "Winotch", "Winotch.csproj"));
+
+        Assert.Equal("Resources/WinotchTray.ico", (string?)xaml.Root?.Attribute("Icon"));
+        Assert.Contains(project.Descendants("Resource"), resource =>
+            (string?)resource.Attribute("Include") == "Resources\\WinotchTray.ico");
+        Assert.True(File.Exists(Path.Combine(FindRepoRoot(), "src", "Winotch", "Resources", "WinotchTray.ico")));
     }
 
     [Fact]
