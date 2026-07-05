@@ -5,21 +5,32 @@ namespace Winotch;
 
 public sealed class WifiService
 {
+    private readonly Func<string[], Task<string>> _runNetshAsync;
+    private readonly Func<string, Task<string>> _runPowerShellAsync;
+
+    public WifiService()
+        : this(RunNetshAsync, RunPowerShellAsync)
+    {
+    }
+
+    internal WifiService(
+        Func<string[], Task<string>> runNetshAsync,
+        Func<string, Task<string>> runPowerShellAsync)
+    {
+        _runNetshAsync = runNetshAsync;
+        _runPowerShellAsync = runPowerShellAsync;
+    }
+
     public async Task<WifiStatus> GetCurrentAsync()
     {
-        var output = await RunNetshAsync("wlan", "show", "interfaces");
+        var output = await _runNetshAsync(["wlan", "show", "interfaces"]);
         var current = ParseCurrentNetsh(output);
         if (current.Name is not null)
         {
             return current;
         }
 
-        var profileOutput = await RunPowerShellAsync("""
-            $profile = Get-NetConnectionProfile -InterfaceAlias 'Wi-Fi' -ErrorAction SilentlyContinue |
-              Where-Object { $_.IPv4Connectivity -eq 'Internet' } |
-              Select-Object -First 1 -ExpandProperty Name
-            $profile
-            """);
+        var profileOutput = await _runPowerShellAsync(WifiProfileFallback.Command);
         var profileName = ParseCurrentProfile(profileOutput);
         return new WifiStatus(profileName, null);
     }
@@ -37,15 +48,8 @@ public sealed class WifiService
         return new WifiStatus(ssid, signal);
     }
 
-    public static string? ParseCurrentProfile(string output)
-    {
-        var profile = output
-            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => line.Trim())
-            .FirstOrDefault(line => !string.IsNullOrWhiteSpace(line));
-
-        return profile is null ? null : NormalizeProfileName(profile);
-    }
+    public static string? ParseCurrentProfile(string output) =>
+        WifiProfileFallback.ParseCurrentProfile(output);
 
     public static IReadOnlyList<WifiNetwork> ParseNetworks(string output)
     {
@@ -90,7 +94,7 @@ public sealed class WifiService
 
     public async Task<string> ConnectAsync(string profileName)
     {
-        var output = await RunNetshAsync("wlan", "connect", $"name={profileName}");
+        var output = await _runNetshAsync(["wlan", "connect", $"name={profileName}"]);
         return output.Contains("completed successfully", StringComparison.OrdinalIgnoreCase)
             ? $"Connecting to {profileName}"
             : $"Windows needs a saved profile for {profileName}.";
@@ -110,12 +114,6 @@ public sealed class WifiService
         }
 
         return null;
-    }
-
-    private static string NormalizeProfileName(string profile)
-    {
-        var match = Regex.Match(profile, @"^(?<name>.+)\s+\d+$");
-        return match.Success ? match.Groups["name"].Value.Trim() : profile.Trim();
     }
 
     private static string ValueAfterColon(string line)

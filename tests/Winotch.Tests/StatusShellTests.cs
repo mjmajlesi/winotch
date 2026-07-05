@@ -37,6 +37,115 @@ public class StatusShellTests
         Assert.Equal("TELUS1255", status);
     }
 
+    [Fact]
+    public void ProfileParserSelectsWirelessInternetProfileAndIgnoresEthernet()
+    {
+        var output = """
+            [
+              {
+                "Name": "Office Ethernet",
+                "InterfaceIndex": 12,
+                "IPv4Connectivity": 4,
+                "IPv6Connectivity": 1,
+                "NdisPhysicalMedium": "802.3",
+                "InterfaceDescription": "Intel(R) Ethernet Connection"
+              },
+              {
+                "Name": "Renamed Home Network 2",
+                "InterfaceIndex": 7,
+                "IPv4Connectivity": 4,
+                "IPv6Connectivity": 1,
+                "NdisPhysicalMedium": 9,
+                "InterfaceDescription": "Qualcomm Wireless Adapter"
+              }
+            ]
+            """;
+
+        var status = WifiService.ParseCurrentProfile(output);
+
+        Assert.Equal("Renamed Home Network", status);
+    }
+
+    [Fact]
+    public void ProfileParserReturnsNullWhenOnlyWiredInternetProfileExists()
+    {
+        var output = """
+            [
+              {
+                "Name": "Office Ethernet",
+                "InterfaceIndex": 12,
+                "IPv4Connectivity": 4,
+                "IPv6Connectivity": 1,
+                "NdisPhysicalMedium": "802.3",
+                "InterfaceDescription": "Intel(R) Ethernet Connection"
+              },
+              {
+                "Name": "Nearby Wireless",
+                "InterfaceIndex": 7,
+                "IPv4Connectivity": 1,
+                "IPv6Connectivity": 1,
+                "NdisPhysicalMedium": 9,
+                "InterfaceDescription": "802.11 Wireless Adapter"
+              }
+            ]
+            """;
+
+        var status = WifiService.ParseCurrentProfile(output);
+
+        Assert.Null(status);
+    }
+
+    [Fact]
+    public async Task WifiCurrentFallsBackToWirelessProfileWhenNetshHasNoSsid()
+    {
+        var netshCalls = new List<string[]>();
+        string? powerShellCommand = null;
+        var service = new WifiService(
+            arguments =>
+            {
+                netshCalls.Add(arguments);
+                return Task.FromResult("""
+                    There is 1 interface on the system:
+
+                        Name                   : Wi-Fi
+                        State                  : disconnected
+                    """);
+            },
+            command =>
+            {
+                powerShellCommand = command;
+                return Task.FromResult("""
+                    [
+                      {
+                        "Name": "Office Ethernet",
+                        "InterfaceIndex": 12,
+                        "IPv4Connectivity": 4,
+                        "IPv6Connectivity": 1,
+                        "NdisPhysicalMedium": "802.3",
+                        "InterfaceDescription": "Intel(R) Ethernet Connection"
+                      },
+                      {
+                        "Name": "Renamed Home Network 2",
+                        "InterfaceIndex": 7,
+                        "IPv4Connectivity": 4,
+                        "IPv6Connectivity": 1,
+                        "NdisPhysicalMedium": 9,
+                        "InterfaceDescription": "Qualcomm Wireless Adapter"
+                      }
+                    ]
+                    """);
+            });
+
+        var status = await service.GetCurrentAsync();
+
+        Assert.Equal("Renamed Home Network", status.Name);
+        Assert.Null(status.Signal);
+        var call = Assert.Single(netshCalls);
+        Assert.Equal(["wlan", "show", "interfaces"], call);
+        Assert.NotNull(powerShellCommand);
+        Assert.DoesNotContain("-InterfaceAlias 'Wi-Fi'", powerShellCommand, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Theory]
     [InlineData("", null)]
     [InlineData("   \r\n\t", null)]
@@ -142,6 +251,24 @@ public class StatusShellTests
     public void WifiNetworkDisplayTextIncludesSignalOnlyWhenPresent(string signal, string expected)
     {
         Assert.Equal(expected, new WifiNetwork("TELUS1255", signal).ToString());
+    }
+
+    [Fact]
+    public async Task NotificationReadAsyncDropsExpiredLiveToastsFromPublicSnapshot()
+    {
+        using var service = new NotificationService();
+        var liveToasts = (List<NotificationItem>)typeof(NotificationService)
+            .GetField("_liveToasts", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .GetValue(service)!;
+        var now = DateTimeOffset.Now;
+        liveToasts.Add(new NotificationItem("Old", "Expired", "Toast", now - TimeSpan.FromMinutes(10), null, []));
+        liveToasts.Add(new NotificationItem("Fresh", "Current", "Toast", now, null, []));
+
+        var snapshot = await service.ReadAsync();
+
+        Assert.Equal("Live Windows toast watcher", snapshot.Status);
+        var item = Assert.Single(snapshot.Items);
+        Assert.Equal("Fresh", item.App);
     }
 
     [Theory]
@@ -822,6 +949,67 @@ public class StatusShellTests
     }
 
     [Fact]
+    public void ShellAnimatorPreservesCurrentOpacityWhenFadeIsInterrupted()
+    {
+        Exception? failure = null;
+        var thread = new Thread(() => failure = Record.Exception(() =>
+        {
+            var target = new Border
+            {
+                Opacity = 0,
+                Visibility = Visibility.Visible
+            };
+            var window = new Window
+            {
+                Width = 1,
+                Height = 1,
+                Content = target,
+                Opacity = 0,
+                ShowInTaskbar = false,
+                WindowStyle = WindowStyle.None
+            };
+            window.Show();
+
+            try
+            {
+                ShellAnimator.Show(target, 60);
+                PumpDispatcher(TimeSpan.FromMilliseconds(ShellAnimationTiming.FadeMilliseconds / 2));
+                var showingOpacity = target.Opacity;
+                Assert.InRange(showingOpacity, 0.05, 0.95);
+
+                ShellAnimator.Hide(target, 60);
+                var hideBaseOpacity = (double)target.GetAnimationBaseValue(UIElement.OpacityProperty);
+                Assert.InRange(hideBaseOpacity, 0.05, 0.95);
+                Assert.True(Math.Abs(showingOpacity - hideBaseOpacity) < 0.05);
+
+                PumpDispatcher(TimeSpan.FromMilliseconds(ShellAnimationTiming.FadeMilliseconds / 2));
+                var hidingOpacity = target.Opacity;
+                Assert.InRange(hidingOpacity, 0, hideBaseOpacity);
+
+                ShellAnimator.Show(target, 60);
+                var reshowBaseOpacity = (double)target.GetAnimationBaseValue(UIElement.OpacityProperty);
+                Assert.True(Math.Abs(hidingOpacity - reshowBaseOpacity) < 0.05);
+                Assert.Equal(Visibility.Visible, target.Visibility);
+
+                PumpDispatcher(TimeSpan.FromMilliseconds(ShellAnimationTiming.FadeMilliseconds + 80));
+
+                Assert.Equal(Visibility.Visible, target.Visibility);
+                Assert.Equal(1, target.Opacity, precision: 2);
+                Assert.False(target.HasAnimatedProperties);
+            }
+            finally
+            {
+                window.Close();
+            }
+        }));
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+
+        Assert.Null(failure);
+    }
+
+    [Fact]
     public void DetailRevealStartsDuringShellMotion()
     {
         Assert.InRange(ShellAnimationTiming.DetailRevealDelayMilliseconds, 1, ShellAnimationTiming.MotionMilliseconds - 1);
@@ -835,6 +1023,19 @@ public class StatusShellTests
 
     private static MediaSnapshot Media(string title, string artist, MediaState state) =>
         new(title, artist, "Brave", null, state, true, true, true, true);
+
+    private static void PumpDispatcher(TimeSpan duration)
+    {
+        var frame = new DispatcherFrame();
+        var timer = new DispatcherTimer { Interval = duration };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            frame.Continue = false;
+        };
+        timer.Start();
+        Dispatcher.PushFrame(frame);
+    }
 
     private static PriorityStatusSnapshot Status(
         int percent = 80,

@@ -16,7 +16,7 @@
         <SolidColorBrush x:Key="NotchMutedText" Color="#9C9C9C" />
 
         <Style x:Key="IconText" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
             <Setter Property="Foreground" Value="{StaticResource NotchText}" />
             <Setter Property="FontSize" Value="15" />
             <Setter Property="VerticalAlignment" Value="Center" />

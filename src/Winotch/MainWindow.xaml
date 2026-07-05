@@ -169,7 +169,7 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="Net" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" VerticalAlignment="Center" />
-                                <TextBlock x:Name="StatsNetValueText" Grid.Column="1" FontSize="10" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" />
+                                <TextBlock x:Name="StatsNetValueText" Grid.Column="1" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Typography.NumeralAlignment="Tabular" />
                             </Grid>
                         </StackPanel>
                         <StackPanel x:Name="AgendaPanel" Margin="0,18,0,0">
@@ -262,7 +262,7 @@
                         <TextBlock Text="Notifications" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource NotchMutedText}" />
                         <TextBlock x:Name="NotificationStateText" FontSize="12" Foreground="{StaticResource NotchMutedText}" Margin="0,4,0,8" />
                         <ListBox x:Name="NotificationList"
-                                 Height="110"
+                                 Height="118"
                                  BorderThickness="0"
                                  Background="Transparent"
                                  Foreground="{StaticResource NotchText}"

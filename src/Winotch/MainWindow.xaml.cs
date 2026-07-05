@@ -454,7 +454,7 @@ public partial class MainWindow : Window
     private void ApplyMedia(MediaSnapshot media)
     {
         MediaPanel.Visibility = media.HasMedia ? Visibility.Visible : Visibility.Collapsed;
-        NotificationList.Height = media.HasMedia ? 56 : 110;
+        NotificationList.Height = media.HasMedia ? 74 : 118;
         if (!media.HasMedia)
         {
             MediaArtworkImage.Source = null;
@@ -556,8 +556,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        ShellAnimator.Hide(DateText);
-        ShellAnimator.Hide(StatusGroup);
+        ShellAnimator.Hide(DateText, _animationFrameRate);
+        ShellAnimator.Hide(StatusGroup, _animationFrameRate);
         ClockGroup.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
         ApplyHeaderDensity(isFullBar: false);
         _appBar.Release();
@@ -767,8 +767,8 @@ public partial class MainWindow : Window
 
         _appBar.Release();
         SetMouseTransparent(false);
-        ShellAnimator.Hide(ClockGroup);
-        ShellAnimator.Hide(StatusGroup);
+        ShellAnimator.Hide(ClockGroup, _animationFrameRate);
+        ShellAnimator.Hide(StatusGroup, _animationFrameRate);
         DetailPanel.Opacity = 0;
         HeaderRow.Height = new GridLength(28);
         NotchShell.Padding = new Thickness(10, 4, 10, 6);
@@ -815,7 +815,7 @@ public partial class MainWindow : Window
         _ignoreHoverUntilUtc = DateTime.UtcNow + ShellAnimationTiming.CollapseGuard;
         if (_activeCompactToast is not null)
         {
-            ShellAnimator.Hide(_activeCompactToast);
+            ShellAnimator.Hide(_activeCompactToast, _animationFrameRate);
             _activeCompactToast = null;
         }
 
@@ -867,7 +867,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            ShellAnimator.Hide(DateText);
+            ShellAnimator.Hide(DateText, _animationFrameRate);
         }
 
         ShellAnimator.Show(StatusGroup, _animationFrameRate);
@@ -885,7 +885,7 @@ public partial class MainWindow : Window
         var monitor = CurrentMonitor();
         var geometry = ShellMetrics.PlaceOnMonitor(ShellMetrics.ForMode(isFullBar, monitor.WidthDip), monitor);
 
-        ShellAnimator.Hide(DateText);
+        ShellAnimator.Hide(DateText, _animationFrameRate);
         ClockGroup.Visibility = Visibility.Visible;
         ClockGroup.Opacity = 1;
         StatusGroup.Visibility = isFullBar ? Visibility.Visible : Visibility.Collapsed;

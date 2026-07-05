@@ -12,6 +12,7 @@ namespace Winotch;
 public sealed class NotificationService : IDisposable
 {
     private const ulong MaxIconBytes = 512 * 1024;
+    private static readonly TimeSpan LiveToastRetention = TimeSpan.FromMinutes(5);
     private readonly object _gate = new();
     private readonly List<NotificationItem> _liveToasts = [];
     private bool _watchingLiveToasts;
@@ -233,6 +234,8 @@ public sealed class NotificationService : IDisposable
     {
         lock (_gate)
         {
+            var cutoff = DateTimeOffset.Now - LiveToastRetention;
+            _liveToasts.RemoveAll(toast => toast.CreatedAt != DateTimeOffset.MinValue && toast.CreatedAt < cutoff);
             return _liveToasts.ToList();
         }
     }

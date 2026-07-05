@@ -5,16 +5,22 @@ namespace Winotch;
 
 public static class ShellAnimator
 {
+    private static readonly DependencyProperty OpacityAnimationGenerationProperty =
+        DependencyProperty.RegisterAttached(
+            "OpacityAnimationGeneration",
+            typeof(int),
+            typeof(ShellAnimator),
+            new PropertyMetadata(0));
+
     private static readonly Duration MotionDuration = new(ShellAnimationTiming.MotionDuration);
     private static readonly Duration FadeDuration = new(ShellAnimationTiming.FadeDuration);
-    private static readonly IEasingFunction Easing = new QuarticEase { EasingMode = EasingMode.EaseOut };
 
     public static void Animate(UIElement target, DependencyProperty property, double value, int frameRate)
     {
         var from = target.GetValue(property) is double current && !double.IsNaN(current) ? current : value;
         var animation = new DoubleAnimation(from, value, MotionDuration)
         {
-            EasingFunction = Easing,
+            EasingFunction = CreateEasing(),
             FillBehavior = FillBehavior.Stop
         };
         animation.Completed += (_, _) =>
@@ -28,21 +34,94 @@ public static class ShellAnimator
 
     public static void Hide(UIElement target)
     {
+        _ = NextOpacityAnimationGeneration(target);
         target.BeginAnimation(UIElement.OpacityProperty, null);
         target.Opacity = 0;
         target.Visibility = Visibility.Collapsed;
     }
 
-    public static void Show(UIElement target, int frameRate)
+    public static void Hide(UIElement target, int frameRate)
     {
-        target.Visibility = Visibility.Visible;
-        var animation = new DoubleAnimation(1, FadeDuration)
+        var from = CurrentOpacity(target);
+        var generation = NextOpacityAnimationGeneration(target);
+        target.BeginAnimation(UIElement.OpacityProperty, null);
+        target.Opacity = from;
+        if (target.Visibility != Visibility.Visible || from <= 0)
         {
-            EasingFunction = Easing
+            target.Opacity = 0;
+            target.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        var animation = new DoubleAnimation(from, 0, FadeDuration)
+        {
+            EasingFunction = CreateEasing(),
+            FillBehavior = FillBehavior.Stop
+        };
+        animation.Completed += (_, _) =>
+        {
+            if (!IsCurrentOpacityAnimation(target, generation))
+            {
+                return;
+            }
+
+            target.BeginAnimation(UIElement.OpacityProperty, null);
+            target.Opacity = 0;
+            target.Visibility = Visibility.Collapsed;
         };
         Timeline.SetDesiredFrameRate(animation, frameRate);
         target.BeginAnimation(UIElement.OpacityProperty, animation, HandoffBehavior.SnapshotAndReplace);
     }
+
+    public static void Show(UIElement target, int frameRate)
+    {
+        var from = target.Visibility == Visibility.Visible ? CurrentOpacity(target) : 0;
+        var generation = NextOpacityAnimationGeneration(target);
+        target.BeginAnimation(UIElement.OpacityProperty, null);
+        target.Opacity = from;
+        target.Visibility = Visibility.Visible;
+        var animation = new DoubleAnimation(from, 1, FadeDuration)
+        {
+            EasingFunction = CreateEasing(),
+            FillBehavior = FillBehavior.Stop
+        };
+        animation.Completed += (_, _) =>
+        {
+            if (!IsCurrentOpacityAnimation(target, generation))
+            {
+                return;
+            }
+
+            target.BeginAnimation(UIElement.OpacityProperty, null);
+            target.Opacity = 1;
+        };
+        Timeline.SetDesiredFrameRate(animation, frameRate);
+        target.BeginAnimation(UIElement.OpacityProperty, animation, HandoffBehavior.SnapshotAndReplace);
+    }
+
+    private static double CurrentOpacity(UIElement target)
+    {
+        var opacity = target.Opacity;
+        if (double.IsNaN(opacity))
+        {
+            return 0;
+        }
+
+        return Math.Clamp(opacity, 0, 1);
+    }
+
+    private static IEasingFunction CreateEasing() => new CubicEase { EasingMode = EasingMode.EaseOut };
+
+    private static int NextOpacityAnimationGeneration(UIElement target)
+    {
+        var current = (int)target.GetValue(OpacityAnimationGenerationProperty);
+        var next = current == int.MaxValue ? 1 : current + 1;
+        target.SetValue(OpacityAnimationGenerationProperty, next);
+        return next;
+    }
+
+    private static bool IsCurrentOpacityAnimation(UIElement target, int generation) =>
+        (int)target.GetValue(OpacityAnimationGenerationProperty) == generation;
 
     public static void AnimateShell(Window window, FrameworkElement shell, ShellGeometry geometry, int frameRate)
     {
