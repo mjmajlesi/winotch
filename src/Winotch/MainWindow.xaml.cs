@@ -215,58 +215,32 @@ public partial class MainWindow : Window
         }
 
         var settings = _settings.Current;
-        var battery = SystemStatus.GetBattery();
+        var battery = ReadBatteryStatus();
         var previousBatteryPercent = _lastBatteryPercent;
-        var batteryVisual = BatteryVisual.FromPercent(battery.Percent, battery.IsCharging);
-        BatteryFill.Width = batteryVisual.FillWidth;
-        BatteryFill.Background = batteryVisual.Brush;
-        BatteryBar.Foreground = batteryVisual.Brush;
-        BatteryText.Text = $"{battery.Percent}%";
-        BatteryBar.Value = battery.Percent;
-        BatteryDetailText.Text = battery.IsCharging ? "Charging" : $"{battery.Percent}% battery";
-        _lastBatteryPercent = battery.Percent;
+        ApplyBatteryStatus(battery);
 
-        var volume = _audio.GetVolume();
-        _updatingVolume = true;
-        VolumeSlider.Value = volume;
-        _updatingVolume = false;
-        VolumeText.Text = $"{volume:0}%";
+        ApplyVolumeStatus(ReadVolumeLevel());
 
-        var media = await _media.ReadAsync();
+        var media = await ReadMediaStatusAsync();
         ApplyMedia(media);
         if (_mediaChanges.ShouldPop(media) && settings.Toasts.MediaToastsEnabled)
         {
             ShowMediaToast();
         }
 
-        var wifi = await _wifi.GetCurrentAsync();
-        WifiText.Text = wifi.Name is null ? "Offline" : $"{wifi.Name} {wifi.SignalText}";
-        var networks = (await _wifi.GetNetworksAsync()).ToList();
-        if (networks.Count == 0 && wifi.Name is not null)
-        {
-            networks.Add(new WifiNetwork(wifi.Name, "Connected"));
-        }
+        var wifi = await ReadWifiStatusAsync();
+        var networks = await ReadWifiNetworksAsync(wifi);
+        ApplyWifiStatus(wifi, networks);
 
-        var usingConnectedFallback = networks.Count == 1 && networks[0].Signal == "Connected";
-        WifiList.ItemsSource = networks;
-        WifiList.Visibility = usingConnectedFallback || networks.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
-        ConnectWifiButton.Visibility = usingConnectedFallback || networks.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
-        WifiStateText.Text = wifi.Name is null
-            ? "Wi-Fi offline"
-            : usingConnectedFallback
-                ? "Connected. Location needed to scan Wi-Fi."
-                : $"Connected to {wifi.Name}";
-        var priorityStatus = _priorityStatus.Read(battery, wifi);
-        ApplyMicState(priorityStatus.MicrophoneActive, _audio.GetCaptureMuted());
+        var priorityStatus = ReadPriorityStatus(battery, wifi);
+        ApplyMicState(priorityStatus.MicrophoneActive, ReadCaptureMuted());
         if (_expanded)
         {
             await RefreshControlCenterAsync(priorityStatus);
         }
 
-        var notifications = await _notifications.ReadAsync();
-        NotificationStateText.Text = notifications.Status;
-        NotificationCountText.Text = notifications.Items.Count.ToString();
-        NotificationList.ItemsSource = notifications.Items;
+        var notifications = await ReadNotificationStatusAsync();
+        ApplyNotificationStatus(notifications);
         if (_notificationChanges.ShouldPop(notifications.Items) &&
             settings.Toasts.NotificationToastsEnabled &&
             !NotificationSilenceService.IsSilenced())
@@ -279,6 +253,163 @@ public partial class MainWindow : Window
         {
             ShowPriorityAlertToast(priorityAlert, previousBatteryPercent);
         }
+    }
+
+    private BatteryInfo ReadBatteryStatus()
+    {
+        try
+        {
+            return SystemStatus.GetBattery();
+        }
+        catch
+        {
+            return _lastBatteryPercent is int percent
+                ? new BatteryInfo(percent, IsCharging: false)
+                : new BatteryInfo(0, IsCharging: false);
+        }
+    }
+
+    private void ApplyBatteryStatus(BatteryInfo battery)
+    {
+        var batteryVisual = BatteryVisual.FromPercent(battery.Percent, battery.IsCharging);
+        BatteryFill.Width = batteryVisual.FillWidth;
+        BatteryFill.Background = batteryVisual.Brush;
+        BatteryBar.Foreground = batteryVisual.Brush;
+        BatteryText.Text = $"{battery.Percent}%";
+        BatteryBar.Value = battery.Percent;
+        BatteryDetailText.Text = battery.IsCharging ? "Charging" : $"{battery.Percent}% battery";
+        _lastBatteryPercent = battery.Percent;
+    }
+
+    private float ReadVolumeLevel()
+    {
+        try
+        {
+            return _audio.GetVolume();
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private void ApplyVolumeStatus(float volume)
+    {
+        _updatingVolume = true;
+        try
+        {
+            VolumeSlider.Value = volume;
+        }
+        finally
+        {
+            _updatingVolume = false;
+        }
+
+        VolumeText.Text = $"{volume:0}%";
+    }
+
+    private async Task<MediaSnapshot> ReadMediaStatusAsync()
+    {
+        try
+        {
+            return await _media.ReadAsync();
+        }
+        catch
+        {
+            return MediaSnapshot.Empty;
+        }
+    }
+
+    private async Task<WifiStatus> ReadWifiStatusAsync()
+    {
+        try
+        {
+            return await _wifi.GetCurrentAsync();
+        }
+        catch
+        {
+            return new WifiStatus(null, null);
+        }
+    }
+
+    private async Task<List<WifiNetwork>> ReadWifiNetworksAsync(WifiStatus wifi)
+    {
+        try
+        {
+            var networks = (await _wifi.GetNetworksAsync()).ToList();
+            if (networks.Count == 0 && wifi.Name is not null)
+            {
+                networks.Add(new WifiNetwork(wifi.Name, "Connected"));
+            }
+
+            return networks;
+        }
+        catch
+        {
+            return wifi.Name is null ? [] : [new WifiNetwork(wifi.Name, "Connected")];
+        }
+    }
+
+    private void ApplyWifiStatus(WifiStatus wifi, IReadOnlyList<WifiNetwork> networks)
+    {
+        WifiText.Text = wifi.Name is null ? "Offline" : $"{wifi.Name} {wifi.SignalText}";
+        var usingConnectedFallback = networks.Count == 1 && networks[0].Signal == "Connected";
+        WifiList.ItemsSource = networks;
+        WifiList.Visibility = usingConnectedFallback || networks.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        ConnectWifiButton.Visibility = usingConnectedFallback || networks.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        WifiStateText.Text = wifi.Name is null
+            ? "Wi-Fi offline"
+            : usingConnectedFallback
+                ? "Connected. Location needed to scan Wi-Fi."
+                : $"Connected to {wifi.Name}";
+    }
+
+    private PriorityStatusSnapshot ReadPriorityStatus(BatteryInfo battery, WifiStatus wifi)
+    {
+        try
+        {
+            return _priorityStatus.Read(battery, wifi);
+        }
+        catch
+        {
+            return new PriorityStatusSnapshot(
+                battery,
+                wifi,
+                BluetoothDeviceName: null,
+                MicrophoneActive: false,
+                CameraActive: false);
+        }
+    }
+
+    private bool ReadCaptureMuted()
+    {
+        try
+        {
+            return _audio.GetCaptureMuted();
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task<NotificationSnapshot> ReadNotificationStatusAsync()
+    {
+        try
+        {
+            return await _notifications.ReadAsync();
+        }
+        catch
+        {
+            return new NotificationSnapshot("Notification status unavailable.", []);
+        }
+    }
+
+    private void ApplyNotificationStatus(NotificationSnapshot notifications)
+    {
+        NotificationStateText.Text = notifications.Status;
+        NotificationCountText.Text = notifications.Items.Count.ToString();
+        NotificationList.ItemsSource = notifications.Items;
     }
 
     private void ApplyFeatureSettings(WinotchSettings settings)
