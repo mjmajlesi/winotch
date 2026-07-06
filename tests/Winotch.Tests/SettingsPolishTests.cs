@@ -146,6 +146,7 @@ public class SettingsPolishTests
         Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "ActivityStrip");
         Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "OpenSettingsButton");
         Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "CopyDiagnosticsButton");
+        Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "NowPlayingSection");
         Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "NoMediaText");
         Assert.Contains(doc.Descendants(ui + "ScrollViewer"), element => (string?)element.Attribute(xamlName) == "AudioControlsScroll");
         Assert.DoesNotContain(doc.Descendants(ui + "ScrollViewer"), element => (string?)element.Attribute(xamlName) == "ActivityContentScroll");
@@ -164,6 +165,8 @@ public class SettingsPolishTests
         Assert.Contains(nowSection.Descendants(), element => (string?)element.Attribute(xamlName) == "FocusTimerSection");
         Assert.Contains(nowSection.Descendants(), element => (string?)element.Attribute(xamlName) == "FocusSetupPanel");
         Assert.Contains(nowSection.Descendants(), element => (string?)element.Attribute(xamlName) == "FocusRunningPanel");
+        Assert.DoesNotContain(nowSection.Descendants(), element => (string?)element.Attribute(xamlName) == "MediaPanel");
+        Assert.DoesNotContain(nowSection.Descendants(), element => (string?)element.Attribute(xamlName) == "NoMediaText");
         Assert.Equal("{StaticResource NotchBlack}", (string?)doc.Descendants(ui + "Border")
             .Single(element => (string?)element.Attribute(xamlName) == "ActivitySection")
             .Attribute("Background"));
@@ -171,33 +174,15 @@ public class SettingsPolishTests
         Assert.DoesNotContain(controlsContent.Descendants(), element => (string?)element.Attribute(xamlName) == "ActivitySection");
         Assert.DoesNotContain(activitySection.Descendants(), element => (string?)element.Attribute(xamlName) == "FocusSetupPanel");
         Assert.DoesNotContain(activitySection.Descendants(), element => (string?)element.Attribute(xamlName) == "FocusRunningPanel");
-        Assert.Equal("TimerModeTab_Click", (string?)doc.Descendants(ui + "Border")
+        Assert.Equal("TimerModeTab_Click", (string?)doc.Descendants(ui + "Button")
             .Single(element => (string?)element.Attribute(xamlName) == "NowModeTab")
-            .Attribute("MouseLeftButtonUp"));
-        Assert.Equal("TimerModeTab_Click", (string?)doc.Descendants(ui + "Border")
-            .Single(element => (string?)element.Attribute(xamlName) == "NowModeTab")
-            .Attribute("MouseLeftButtonDown"));
-        Assert.Equal("TimerModeTab_Click", (string?)doc.Descendants(ui + "Border")
-            .Single(element => (string?)element.Attribute(xamlName) == "NowModeTab")
-            .Attribute("PreviewMouseLeftButtonDown"));
-        Assert.Equal("ControlsModeTab_Click", (string?)doc.Descendants(ui + "Border")
+            .Attribute("Click"));
+        Assert.Equal("ControlsModeTab_Click", (string?)doc.Descendants(ui + "Button")
             .Single(element => (string?)element.Attribute(xamlName) == "ControlsModeTab")
-            .Attribute("MouseLeftButtonUp"));
-        Assert.Equal("ControlsModeTab_Click", (string?)doc.Descendants(ui + "Border")
-            .Single(element => (string?)element.Attribute(xamlName) == "ControlsModeTab")
-            .Attribute("MouseLeftButtonDown"));
-        Assert.Equal("ControlsModeTab_Click", (string?)doc.Descendants(ui + "Border")
-            .Single(element => (string?)element.Attribute(xamlName) == "ControlsModeTab")
-            .Attribute("PreviewMouseLeftButtonDown"));
-        Assert.Equal("ActivityModeTab_Click", (string?)doc.Descendants(ui + "Border")
+            .Attribute("Click"));
+        Assert.Equal("ActivityModeTab_Click", (string?)doc.Descendants(ui + "Button")
             .Single(element => (string?)element.Attribute(xamlName) == "ActivityModeTab")
-            .Attribute("MouseLeftButtonUp"));
-        Assert.Equal("ActivityModeTab_Click", (string?)doc.Descendants(ui + "Border")
-            .Single(element => (string?)element.Attribute(xamlName) == "ActivityModeTab")
-            .Attribute("MouseLeftButtonDown"));
-        Assert.Equal("ActivityModeTab_Click", (string?)doc.Descendants(ui + "Border")
-            .Single(element => (string?)element.Attribute(xamlName) == "ActivityModeTab")
-            .Attribute("PreviewMouseLeftButtonDown"));
+            .Attribute("Click"));
         Assert.Equal("{StaticResource NotchBlack}", (string?)doc.Descendants(ui + "Border")
             .Single(element => (string?)element.Attribute(xamlName) == "ActivityStrip")
             .Attribute("Background"));
@@ -229,6 +214,8 @@ public class SettingsPolishTests
 
         Assert.Contains("\"Connected. Location needed to scan Wi-Fi.\"", mainWindow);
         Assert.DoesNotContain("Scan needs Windows Location permission", mainWindow);
+        Assert.Equal(2, mainWindow.Split("SetMouseTransparent(isFullBar && !_expanded)").Length - 1);
+        Assert.Contains("WindowChromeInterop.SetMouseTransparent(this, enabled && !_expanded && DetailPanel.Opacity <= 0);", mainWindow);
         Assert.DoesNotContain("Notification listener is not available", notifications);
         Assert.DoesNotContain("Notification access unavailable:", notifications);
         Assert.Contains("\"Notification access unavailable.\"", notifications);

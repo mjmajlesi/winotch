@@ -1053,7 +1053,7 @@ public partial class MainWindow : Window
         {
             ShellAnimator.Animate(DetailPanel, OpacityProperty, 0, _animationFrameRate);
             ShellAnimator.AnimateShell(this, NotchShell, geometry, _animationFrameRate);
-            SetMouseTransparent(isFullBar);
+            SetMouseTransparent(isFullBar && !_expanded);
             return;
         }
 
@@ -1065,7 +1065,7 @@ public partial class MainWindow : Window
         Top = geometry.Top;
         NotchShell.Width = geometry.Width;
         NotchShell.Height = geometry.ShellHeight;
-        SetMouseTransparent(isFullBar);
+        SetMouseTransparent(isFullBar && !_expanded);
     }
 
     private void ApplyHeaderDensity(bool isFullBar)
@@ -1162,17 +1162,17 @@ public partial class MainWindow : Window
         NotificationList.Focus();
     }
 
-    private void TimerModeTab_Click(object sender, MouseButtonEventArgs e)
+    private void TimerModeTab_Click(object sender, RoutedEventArgs e)
     {
         SelectExpandedPanelMode(ExpandedPanelMode.Timer);
     }
 
-    private void ControlsModeTab_Click(object sender, MouseButtonEventArgs e)
+    private void ControlsModeTab_Click(object sender, RoutedEventArgs e)
     {
         SelectExpandedPanelMode(ExpandedPanelMode.Controls);
     }
 
-    private void ActivityModeTab_Click(object sender, MouseButtonEventArgs e)
+    private void ActivityModeTab_Click(object sender, RoutedEventArgs e)
     {
         SelectExpandedPanelMode(ExpandedPanelMode.Activity);
         NotificationList.Focus();
@@ -1197,6 +1197,8 @@ public partial class MainWindow : Window
         ControlsTabContent.Visibility = activityActive ? Visibility.Collapsed : Visibility.Visible;
         ActivitySection.Visibility = activityActive ? Visibility.Visible : Visibility.Collapsed;
         AudioControlsSection.Visibility = timerActive ? Visibility.Collapsed : Visibility.Visible;
+        NowPlayingSection.Visibility = timerActive ? Visibility.Collapsed : Visibility.Visible;
+        NowSection.Margin = timerActive ? new Thickness(0) : new Thickness(0, 0, 0, 12);
         Grid.SetColumn(TimerColumn, timerActive ? 0 : 1);
         Grid.SetColumnSpan(TimerColumn, timerActive ? 2 : 1);
 
@@ -1205,9 +1207,9 @@ public partial class MainWindow : Window
         ApplyExpandedTabState(NowModeTab, NowModeIcon, NowModeText, timerActive);
     }
 
-    private void ApplyExpandedTabState(Border tab, TextBlock icon, TextBlock text, bool active)
+    private void ApplyExpandedTabState(System.Windows.Controls.Button tab, TextBlock icon, TextBlock text, bool active)
     {
-        tab.Background = active ? (System.Windows.Media.Brush)FindResource("NotchPanel") : System.Windows.Media.Brushes.Transparent;
+        tab.Background = active ? (System.Windows.Media.Brush)FindResource("NotchPanel") : (System.Windows.Media.Brush)FindResource("NotchHitTestFill");
         tab.BorderBrush = active ? (System.Windows.Media.Brush)FindResource("NotchStroke") : System.Windows.Media.Brushes.Transparent;
         icon.Foreground = active ? (System.Windows.Media.Brush)FindResource("NotchText") : (System.Windows.Media.Brush)FindResource("NotchMutedText");
         text.Foreground = active ? (System.Windows.Media.Brush)FindResource("NotchText") : (System.Windows.Media.Brush)FindResource("NotchMutedText");
@@ -1501,7 +1503,7 @@ public partial class MainWindow : Window
 
     private void SetMouseTransparent(bool enabled)
     {
-        WindowChromeInterop.SetMouseTransparent(this, enabled);
+        WindowChromeInterop.SetMouseTransparent(this, enabled && !_expanded && DetailPanel.Opacity <= 0);
     }
 
     private static System.Windows.Media.Brush FrozenBrush(System.Windows.Media.Color color)
