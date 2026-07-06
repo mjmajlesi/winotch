@@ -130,17 +130,81 @@ public class SettingsPolishTests
         Assert.Equal("14", (string?)audioSection.Attribute("Padding"));
         Assert.Equal("8", (string?)audioSection.Attribute("CornerRadius"));
         Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "OutputDeviceList");
+        Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "SelectedOutputDeviceText");
         Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "VolumeSlider");
         Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "AudioSessionMixerSection");
         Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "MicMuteButton");
         Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "SystemRail");
         Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "ModeTabs");
         Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "ControlsModeTab");
+        Assert.Contains(doc.Descendants(ui + "TextBlock"), element =>
+            (string?)element.Attribute(xamlName) == "NowModeText" &&
+            (string?)element.Attribute("Text") == "Timer");
+        Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "TimerColumn");
+        Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "ActivityModeTab");
+        Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "ControlsTabContent");
         Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "ActivityStrip");
         Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "OpenSettingsButton");
         Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "CopyDiagnosticsButton");
-        Assert.Contains(audioSection.Descendants(ui + "Expander"), expander =>
-            (string?)expander.Attribute("Header") == "More");
+        Assert.Contains(doc.Descendants(), element => (string?)element.Attribute(xamlName) == "NoMediaText");
+        Assert.Contains(doc.Descendants(ui + "ScrollViewer"), element => (string?)element.Attribute(xamlName) == "AudioControlsScroll");
+        Assert.DoesNotContain(doc.Descendants(ui + "ScrollViewer"), element => (string?)element.Attribute(xamlName) == "ActivityContentScroll");
+        Assert.Equal("{StaticResource NotchBlack}", (string?)audioSection.Attribute("Background"));
+        var nowSection = doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "NowSection");
+        var activitySection = doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "ActivitySection");
+        var controlsContent = doc.Descendants(ui + "Grid")
+            .Single(element => (string?)element.Attribute(xamlName) == "ControlsTabContent");
+        Assert.Equal("{StaticResource NotchBlack}", (string?)nowSection.Attribute("Background"));
+        Assert.Contains(nowSection.Descendants(ui + "TextBlock"), element =>
+            (string?)element.Attribute("Text") == "Timer");
+        Assert.Contains(nowSection.Descendants(ui + "TextBlock"), element =>
+            (string?)element.Attribute("Text") == "Pomodoro");
+        Assert.Contains(nowSection.Descendants(), element => (string?)element.Attribute(xamlName) == "FocusTimerSection");
+        Assert.Contains(nowSection.Descendants(), element => (string?)element.Attribute(xamlName) == "FocusSetupPanel");
+        Assert.Contains(nowSection.Descendants(), element => (string?)element.Attribute(xamlName) == "FocusRunningPanel");
+        Assert.Equal("{StaticResource NotchBlack}", (string?)doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "ActivitySection")
+            .Attribute("Background"));
+        Assert.Equal("Collapsed", (string?)activitySection.Attribute("Visibility"));
+        Assert.DoesNotContain(controlsContent.Descendants(), element => (string?)element.Attribute(xamlName) == "ActivitySection");
+        Assert.DoesNotContain(activitySection.Descendants(), element => (string?)element.Attribute(xamlName) == "FocusSetupPanel");
+        Assert.DoesNotContain(activitySection.Descendants(), element => (string?)element.Attribute(xamlName) == "FocusRunningPanel");
+        Assert.Equal("TimerModeTab_Click", (string?)doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "NowModeTab")
+            .Attribute("MouseLeftButtonUp"));
+        Assert.Equal("TimerModeTab_Click", (string?)doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "NowModeTab")
+            .Attribute("MouseLeftButtonDown"));
+        Assert.Equal("TimerModeTab_Click", (string?)doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "NowModeTab")
+            .Attribute("PreviewMouseLeftButtonDown"));
+        Assert.Equal("ControlsModeTab_Click", (string?)doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "ControlsModeTab")
+            .Attribute("MouseLeftButtonUp"));
+        Assert.Equal("ControlsModeTab_Click", (string?)doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "ControlsModeTab")
+            .Attribute("MouseLeftButtonDown"));
+        Assert.Equal("ControlsModeTab_Click", (string?)doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "ControlsModeTab")
+            .Attribute("PreviewMouseLeftButtonDown"));
+        Assert.Equal("ActivityModeTab_Click", (string?)doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "ActivityModeTab")
+            .Attribute("MouseLeftButtonUp"));
+        Assert.Equal("ActivityModeTab_Click", (string?)doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "ActivityModeTab")
+            .Attribute("MouseLeftButtonDown"));
+        Assert.Equal("ActivityModeTab_Click", (string?)doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "ActivityModeTab")
+            .Attribute("PreviewMouseLeftButtonDown"));
+        Assert.Equal("{StaticResource NotchBlack}", (string?)doc.Descendants(ui + "Border")
+            .Single(element => (string?)element.Attribute(xamlName) == "ActivityStrip")
+            .Attribute("Background"));
+        Assert.Contains(audioSection.Descendants(), element => (string?)element.Attribute(xamlName) == "AudioMoreToggleButton");
+        var audioMorePanel = audioSection.Descendants()
+            .Single(element => (string?)element.Attribute(xamlName) == "AudioMorePanel");
+        Assert.Equal("Collapsed", (string?)audioMorePanel.Attribute("Visibility"));
         Assert.Contains(audioSection.Descendants(ui + "Button"), button =>
             (string?)button.Attribute("Click") == "OutputDevice_Click" &&
             (string?)button.Attribute("HorizontalContentAlignment") == "Stretch");

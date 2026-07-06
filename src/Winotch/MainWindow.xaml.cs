@@ -13,6 +13,13 @@ namespace Winotch;
 
 public partial class MainWindow : Window
 {
+    private enum ExpandedPanelMode
+    {
+        Timer,
+        Controls,
+        Activity
+    }
+
     private const double FocusLiveProgressWidth = 26;
     private const double ChargingToastFillWidth = 24;
     private const double ChargingToastSweepWidth = 12;
@@ -513,7 +520,11 @@ public partial class MainWindow : Window
         var showAppMixer = _settings.Current.Features.ShowAppMixer;
         try
         {
-            OutputDeviceList.ItemsSource = _audioDevices.GetRenderDevices();
+            var outputDevices = _audioDevices.GetRenderDevices();
+            OutputDeviceList.ItemsSource = outputDevices;
+            SelectedOutputDeviceText.Text = outputDevices.FirstOrDefault(device => device.IsDefault)?.Name
+                ?? outputDevices.FirstOrDefault()?.Name
+                ?? "Output unavailable";
 
             ApplyAppMixerEnabled(showAppMixer);
             if (showAppMixer)
@@ -536,6 +547,7 @@ public partial class MainWindow : Window
         catch
         {
             OutputDeviceList.ItemsSource = Array.Empty<AudioOutputDevice>();
+            SelectedOutputDeviceText.Text = "Output unavailable";
             AudioSessionList.ItemsSource = Array.Empty<AudioSessionRow>();
             ApplyAppMixerEnabled(showAppMixer);
             if (showAppMixer)
@@ -585,7 +597,7 @@ public partial class MainWindow : Window
     private void ApplyMedia(MediaSnapshot media)
     {
         MediaPanel.Visibility = media.HasMedia ? Visibility.Visible : Visibility.Collapsed;
-        NotificationList.Height = media.HasMedia ? 74 : 118;
+        NoMediaText.Visibility = media.HasMedia ? Visibility.Collapsed : Visibility.Visible;
         if (!media.HasMedia)
         {
             MediaArtworkImage.Source = null;
@@ -693,6 +705,8 @@ public partial class MainWindow : Window
         ApplyHeaderDensity(isFullBar: false);
         _appBar.Release();
         SetMouseTransparent(false);
+        SelectExpandedPanelMode(ExpandedPanelMode.Controls);
+        SetAudioMoreExpanded(false);
         HeaderRow.Height = new GridLength(28);
         NotchShell.Padding = new Thickness(10, 4, 10, 6);
         NotchShell.CornerRadius = new CornerRadius(0, 0, 34, 34);
@@ -1144,7 +1158,59 @@ public partial class MainWindow : Window
 
     private void ViewNotifications_Click(object sender, RoutedEventArgs e)
     {
+        SelectExpandedPanelMode(ExpandedPanelMode.Activity);
         NotificationList.Focus();
+    }
+
+    private void TimerModeTab_Click(object sender, MouseButtonEventArgs e)
+    {
+        SelectExpandedPanelMode(ExpandedPanelMode.Timer);
+    }
+
+    private void ControlsModeTab_Click(object sender, MouseButtonEventArgs e)
+    {
+        SelectExpandedPanelMode(ExpandedPanelMode.Controls);
+    }
+
+    private void ActivityModeTab_Click(object sender, MouseButtonEventArgs e)
+    {
+        SelectExpandedPanelMode(ExpandedPanelMode.Activity);
+        NotificationList.Focus();
+    }
+
+    private void AudioMoreToggle_Click(object sender, RoutedEventArgs e)
+    {
+        SetAudioMoreExpanded(AudioMorePanel.Visibility != Visibility.Visible);
+    }
+
+    private void SetAudioMoreExpanded(bool expanded)
+    {
+        AudioMorePanel.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
+        AudioMoreChevron.Text = expanded ? "\uE70E" : "\uE70D";
+    }
+
+    private void SelectExpandedPanelMode(ExpandedPanelMode mode)
+    {
+        var activityActive = mode == ExpandedPanelMode.Activity;
+        var timerActive = mode == ExpandedPanelMode.Timer;
+
+        ControlsTabContent.Visibility = activityActive ? Visibility.Collapsed : Visibility.Visible;
+        ActivitySection.Visibility = activityActive ? Visibility.Visible : Visibility.Collapsed;
+        AudioControlsSection.Visibility = timerActive ? Visibility.Collapsed : Visibility.Visible;
+        Grid.SetColumn(TimerColumn, timerActive ? 0 : 1);
+        Grid.SetColumnSpan(TimerColumn, timerActive ? 2 : 1);
+
+        ApplyExpandedTabState(ControlsModeTab, ControlsModeIcon, ControlsModeText, mode == ExpandedPanelMode.Controls);
+        ApplyExpandedTabState(ActivityModeTab, ActivityModeIcon, ActivityModeText, activityActive);
+        ApplyExpandedTabState(NowModeTab, NowModeIcon, NowModeText, timerActive);
+    }
+
+    private void ApplyExpandedTabState(Border tab, TextBlock icon, TextBlock text, bool active)
+    {
+        tab.Background = active ? (System.Windows.Media.Brush)FindResource("NotchPanel") : System.Windows.Media.Brushes.Transparent;
+        tab.BorderBrush = active ? (System.Windows.Media.Brush)FindResource("NotchStroke") : System.Windows.Media.Brushes.Transparent;
+        icon.Foreground = active ? (System.Windows.Media.Brush)FindResource("NotchText") : (System.Windows.Media.Brush)FindResource("NotchMutedText");
+        text.Foreground = active ? (System.Windows.Media.Brush)FindResource("NotchText") : (System.Windows.Media.Brush)FindResource("NotchMutedText");
     }
 
     private async void CopyDiagnostics_Click(object sender, RoutedEventArgs e)
